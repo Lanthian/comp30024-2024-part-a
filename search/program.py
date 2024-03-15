@@ -35,18 +35,31 @@ def search(
     # ... (your solution goes here!)
     # ...
 
-    """
-    starting_srcs = [(Coord, int)]
+
+    # -- Start search by finding valid red tokens to build off of --
+    starting_srcs = []              # [(Coord, int)]
     HEURISTIC_INDEX = 1
 
-    for tile in board.items():
+    for (coord, color) in board.items():
         # Generate possible starting locations, inserted via target heuristic 
-        if tile.PlayerColor == PlayerColor.RED:
-            starting_srcs.insert(HEURISTIC_INDEX, (tile, distance_from_axes(tile,target)))
+        if color == PlayerColor.RED:
+            # todo - an intelligent insert making use of generating a sorted 
+            # list would be better here. For now, append + sort will do...
+            starting_srcs.append((coord, distance_from_axes(coord,target)))
+            starting_srcs.sort(key=lambda x : x[HEURISTIC_INDEX])
     
     # test print
-    print(starting_srcs)
-    """
+    print(starting_srcs)        # temp
+
+    # maybe find open air neighbours of these points instead...
+
+    # next, need to try placing all possible tetrominos down, centred from this 
+    # point, and measure which move is best via similar heuristic
+    # then, repeat - finding open air spots next to these
+
+    # from this note here, I'm discovering that the process of queuing and 
+    # selecting next moves is really quite complex, or elusive to me right now 
+    # at the very least
 
 
     # Here we're returning "hardcoded" actions as an example of the expected
@@ -60,8 +73,11 @@ def search(
     ]
 
 def distance_from_axes(source: Coord, target: Coord) -> int:
-    # should add summed additional measure that considers how many filled cells 
-    # row or column already has
+    """Heuristic: Finds the minimum distance from a source coord to either of a 
+    target coord's axes. Returns this integer.
+    """
+    # todo - should subtract(?) summed additional measure that considers how 
+    # many filled cells the more important row or column already has
     return min(
         abs(target.c - source.c), 
         abs(target.r - source.r)
