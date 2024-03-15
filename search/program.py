@@ -35,6 +35,20 @@ def search(
     # ... (your solution goes here!)
     # ...
 
+    """
+    starting_srcs = [(Coord, int)]
+    HEURISTIC_INDEX = 1
+
+    for tile in board.items():
+        # Generate possible starting locations, inserted via target heuristic 
+        if tile.PlayerColor == PlayerColor.RED:
+            starting_srcs.insert(HEURISTIC_INDEX, (tile, distance_from_axes(tile,target)))
+    
+    # test print
+    print(starting_srcs)
+    """
+
+
     # Here we're returning "hardcoded" actions as an example of the expected
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
@@ -44,3 +58,11 @@ def search(
         PlaceAction(Coord(1, 8), Coord(2, 8), Coord(3, 8), Coord(4, 8)),
         PlaceAction(Coord(5, 8), Coord(6, 8), Coord(7, 8), Coord(8, 8)),
     ]
+
+def distance_from_axes(source: Coord, target: Coord) -> int:
+    # should add summed additional measure that considers how many filled cells 
+    # row or column already has
+    return min(
+        abs(target.c - source.c), 
+        abs(target.r - source.r)
+    ) 
