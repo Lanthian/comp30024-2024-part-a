@@ -20,3 +20,13 @@ minimising the calculation required to assure that a board is unsolvable. Ideas 
 * Looking at test-vis2.csv, it would be handy to find some clever quick check to see if the target square is blocked off
     from line completion via the formation of blue around it (e.g. red is boxed in). Might be better to frame this trick
     from source POV, rather than target POV.
+
+
+### Physical code
+* Need a way to generate all tetrominoes in all (non duplicate) orientations centred on a tile
+    * then, need to validate that placing these on the board is valid (not on top of other existing tokens)
+    * hard coding a function to output all these might be the best solution here at the time being
+* Need to write a heuristic to evaluate board state
+* Need to write a structure to contain each path - current board state, PLACEs made to get here (in order), current 
+    board state cost
+    * these structures will be kept in a queue, sorted on ascending current state cost
