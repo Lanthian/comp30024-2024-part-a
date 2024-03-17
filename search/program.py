@@ -1,7 +1,7 @@
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
-from .core import PlayerColor, Coord, PlaceAction
+from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 
 
@@ -45,15 +45,18 @@ def search(
         if color == PlayerColor.RED:
             # todo - an intelligent insert making use of generating a sorted 
             # list would be better here. For now, append + sort will do...
-            starting_srcs.append((coord, distance_from_axes(coord,target)))
+            starting_srcs.append((coord, distance_from_axes2(board, coord,target)))
             starting_srcs.sort(key=lambda x : x[HEURISTIC_INDEX])
     
-    # test print
-    print(starting_srcs)        # temp
+
+
+    # test prints
+    print(starting_srcs)                        # temp
+    print(free_cells(board, target, "r"))       # temp
 
     # maybe find open air neighbours of these points instead...
 
-    # next, need to try placing all possible tetrominos down, centred from this 
+    # next, need to try placing all possible tetrominoes down, centred from this 
     # point, and measure which move is best via similar heuristic
     # then, repeat - finding open air spots next to these
 
@@ -72,6 +75,7 @@ def search(
         PlaceAction(Coord(5, 8), Coord(6, 8), Coord(7, 8), Coord(8, 8)),
     ]
 
+
 def distance_from_axes(source: Coord, target: Coord) -> int:
     """Heuristic: Finds the minimum distance from a source coord to either of a 
     target coord's axes. Returns this integer.
@@ -81,4 +85,51 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     return min(
         abs(target.c - source.c), 
         abs(target.r - source.r)
+    )
+
+
+# todo - temp naming and idea 
+def distance_from_axes2(board: dict[Coord, PlayerColor], 
+                       source: Coord, 
+                       target: Coord) -> int:
+    """Heuristic: Finds the minimum distance from a source coord to either of a 
+    target coord's axes PLUS the number of free cells to fill. Returns this 
+    integer.
+    """
+    return min(
+        abs(target.c - source.c) + free_cells(board, target, "c"), 
+        abs(target.r - source.r) + free_cells(board, target, "r")
     ) 
+
+
+def free_cells(
+    board: dict[Coord, PlayerColor], 
+    target: Coord,
+    axis: str
+) -> int | None:
+    """Takes a dictionary of board tokens `board`, a Coord `target`, and an 
+    `axis` flag to determine which board axis is counted over. Utilises the fact 
+    that the board is a sparse representation of tokens present by checking if 
+    dict contains each axis coordinate.
+
+    Returns either the count of free cells in target axis, or None if incorrect 
+    use / error. 
+    """
+    free = BOARD_N
+    
+    # Find which axis is iterated over
+    match axis:
+        case "x" | "r" | "row":
+            axis_iterator = lambda x: Coord(target.r, x)
+        case "y" | "c" | "col":
+            axis_iterator = lambda x: Coord(x, target.c)
+        case _:
+            print("ERROR free_cells: invalid axis specified.")
+            return None
+
+    # Subtract occupied cells to find free count
+    for i in range(BOARD_N):
+        if axis_iterator(i) in board:
+            free -= 1
+
+    return free
