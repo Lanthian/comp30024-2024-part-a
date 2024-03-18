@@ -69,11 +69,15 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
-    return [
+    temp = [
         PlaceAction(Coord(2, 5), Coord(2, 6), Coord(3, 6), Coord(3, 7)),
         PlaceAction(Coord(1, 8), Coord(2, 8), Coord(3, 8), Coord(4, 8)),
         PlaceAction(Coord(5, 8), Coord(6, 8), Coord(7, 8), Coord(8, 8)),
     ]
+
+    # print (valid_place(board,temp[0]))                        # temp
+    # print (make_place(board, temp[0], PlayerColor.RED))       # temp
+    return temp
 
 
 def distance_from_axes(source: Coord, target: Coord) -> int:
@@ -133,3 +137,55 @@ def free_cells(
             free -= 1
 
     return free
+
+
+def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
+    """
+    Checks is a tetromino placement is valid for a given board state. Assumes
+    tetromino coords themselves are in a valid shape.
+
+    Parameters:
+        `board`: a dictionary representing the initial board state, mapping
+            coordinates to "player colours". The keys are `Coord` instances,
+            and the values are `PlayerColor` instances.  
+        `place`: a `PlaceAction`instance of four coordinates of a tetromino
+            piece to place onto the board.
+    
+    Returns:
+        A binary int for whether or not given PlaceAction can be reasonably 
+        performed on given board. Returns 1 if valid, 0 if not.
+    """
+
+    # Verify this is the only invalid way a piece can be placed
+    for coord in place.coords:
+        if coord in board:
+            return 0
+    return 1
+
+
+def make_place(
+    board: dict[Coord, PlayerColor], 
+    place: PlaceAction, 
+    color: PlayerColor
+) -> dict[Coord, PlayerColor]:
+    """
+    Assumes the place actions have been validated first, otherwise it can write
+    over the top of existing cells.
+
+    Parameters:
+        `board`: a dictionary representing the initial board state, mapping
+            coordinates to "player colours". The keys are `Coord` instances,
+            and the values are `PlayerColor` instances.  
+        `place`: a `PlaceAction`instance of four coordinates of a tetromino
+            piece to place onto the board.
+        `color`: the core.py `PlayerColor` of the tetromino piece being played
+    
+    Returns:
+        An altered board containing the changes of adding given tetromino piece.
+    """
+
+    for coord in place.coords:
+        board[coord] = color
+    # miiiight need to check if board has rows / columns cleared here, and 
+    # update the board accordingly?
+    return board
