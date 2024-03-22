@@ -156,7 +156,7 @@ def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
         performed on given board. Returns 1 if valid, 0 if not.
     """
 
-    # Verify this is the only invalid way a piece can be placed
+    # todo - Verify this is the only invalid way a piece can be placed
     for coord in place.coords:
         if coord in board:
             return 0
@@ -170,7 +170,10 @@ def make_place(
 ) -> dict[Coord, PlayerColor]:
     """
     Assumes the place actions have been validated first, otherwise it can write
-    over the top of existing cells.
+    over the top of existing cells. Places tetrominoes on a board, clearing rows
+    if filled. 
+    Note: can only clear rows/cols currently being placed in - previously filled
+    axes will remain full.
 
     Parameters:
         `board`: a dictionary representing the initial board state, mapping
@@ -181,11 +184,33 @@ def make_place(
         `color`: the core.py `PlayerColor` of the tetromino piece being played
     
     Returns:
-        An altered board containing the changes of adding given tetromino piece.
+        An altered board containing the changes of adding given tetromino piece
+        and clearing now full axes.
     """
+    placed_r = set()
+    placed_c = set()
 
     for coord in place.coords:
+        # Add coordinate axes to tracking sets and place token
+        placed_r.add(coord.r)
+        placed_c.add(coord.c)
         board[coord] = color
-    # miiiight need to check if board has rows / columns cleared here, and 
-    # update the board accordingly?
+
+
+    # - If necessary, clear now full rows and columns -
+    to_clear = set()
+    IRRELEVANT = 0
+
+    # Find all cells that need to be dropped (existing in full rows / cols)
+    for r in placed_r:
+        if free_cells(board, Coord(r,IRRELEVANT), "r") == 0:
+            to_clear.add([Coord(r,i) for i in range(BOARD_N)])
+    for c in placed_c:
+        if free_cells(board, Coord(IRRELEVANT,c), "c") == 0:
+            to_clear.add([Coord(i,c) for i in range(BOARD_N)])
+
+    # Drop these cells from board
+    for tile in to_clear:
+        board.pop(tile, 0)
+        
     return board
