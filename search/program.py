@@ -97,10 +97,11 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     """
     # todo - should subtract(?) summed additional measure that considers how 
     # many filled cells the more important row or column already has
-    return min(
-        abs(target.c - source.c), 
-        abs(target.r - source.r)
-    )
+    row_distance = min(abs(target.c - source.c), BOARD_N - abs(target.c - source.c))
+    col_distance = min(abs(target.c - source.c), BOARD_N - abs(target.c - source.c))
+    
+    return row_distance + col_distance
+
 
 
 # todo - temp naming and idea 
