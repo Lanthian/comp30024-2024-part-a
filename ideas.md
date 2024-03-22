@@ -30,3 +30,19 @@ minimising the calculation required to assure that a board is unsolvable. Ideas 
 * Need to write a structure to contain each path - current board state, PLACEs made to get here (in order), current 
     board state cost
     * these structures will be kept in a queue, sorted on ascending current state cost
+
+
+### 2024.03.22
+* Tetrominoes are now generatable centred on a tile (hard coded) - now need a way to generate them AROUND a tile
+    * board place actions can be now validated and placements can be made (filled axes are cleared)
+* Heurestic written - considers an admissible estimate at least possible moves needed to reach and clear a target axis
+* "path" structure not yet created, but brainstormed from class content 
+    * (STATE, PARENT STATE, path cost so far (g(state)), remaining heuristic cost estimated (h(state)))
+    * priority queue still agreed needed. Dictionary or set required for seen board states
+## Search()
+* Check if current state is goal state - terminate and output current path if so, add to seen if not
+* Generate all 'place' actions around existing red tiles
+* Check if place actions are valid, generate new board states from them if so
+* Insert new board states into priority queue/linked list based on some g(state) + h(state)
+* Select new current state from front of queue
+* Repeat.
