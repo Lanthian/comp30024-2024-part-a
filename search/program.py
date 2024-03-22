@@ -1,6 +1,7 @@
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
+# todo/temp - Terminal input
 # temp - python -m search < test-vis1.csv
 
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
@@ -48,7 +49,7 @@ def search(
         if color == PlayerColor.RED:
             # todo - an intelligent insert making use of generating a sorted 
             # list would be better here. For now, append + sort will do...
-            starting_srcs.append((coord, distance_from_axes2(board, coord,target)))
+            starting_srcs.append((coord, heu2(board, coord,target)))
             starting_srcs.sort(key=lambda x : x[HEURISTIC_INDEX])
     
 
@@ -80,9 +81,9 @@ def search(
 
 
     # # temp : print out board state changes
-    # for i in temp:
-    #     board = make_place(board, i, PlayerColor.RED)
-    #     print(render_board(board, target, ansi=False))
+    for i in temp:
+        board = make_place(board, i, PlayerColor.RED)
+        print(render_board(board, target, ansi=False))
 
     # print (valid_place(board,temp[0]))                        # temp
     # print (make_place(board, temp[0], PlayerColor.RED))       # temp
@@ -103,17 +104,32 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
 
 
 # todo - temp naming and idea 
-def distance_from_axes2(board: dict[Coord, PlayerColor], 
-                       source: Coord, 
-                       target: Coord) -> int:
-    """Heuristic: Finds the minimum distance from a source coord to either of a 
-    target coord's axes PLUS the number of free cells to fill. Returns this 
-    integer.
+def heu2(board: dict[Coord, PlayerColor], 
+        source: Coord, 
+        target: Coord) -> int:
+    """A heuristic - finds the minimum piece cost from a source coord to either 
+    of a target coord's axes PLUS the number of free cells to fill. 
+    Piece cost/standardisation refers to perfectly placing a piece towards
+    filling cells and approaching axis (dividing tile measure by 4 for number of
+    tiles in tetromino).
+
+    Parameters:
+        `board`: a dictionary representing the initial board state, mapping
+            coordinates to "player colours". The keys are `Coord` instances,
+            and the values are `PlayerColor` instances.  
+        `source`: a starting RED coordinate to build off of on the board.
+        `target`: the target BLUE coordinate to remove from the board.
+    
+    Returns:
+        An admissible heuristic integer of optimal least possible moves to clear
+        target coordinate.
     """
-    return min(
-        abs(target.c - source.c) + free_cells(board, target, "c"), 
-        abs(target.r - source.r) + free_cells(board, target, "r")
-    ) 
+    P_SIZE = 4                                  # 4 tiles in a tetromino
+    # In terms of reaching a filled axis:
+    # xy = x pieces then y pieces, yx = y pieces then x pieces
+    xy = ceildiv(abs(target.c-source.c) + free_cells(board,target,"c"), P_SIZE)
+    yx = ceildiv(abs(target.r-source.r) + free_cells(board,target,"r"), P_SIZE)
+    return min(xy, yx)
 
 
 def free_cells(
@@ -224,3 +240,11 @@ def make_place(
         board.pop(tile, 0)
         
     return board
+
+
+def ceildiv(a, b):
+    """Helper math function to perform ceiling division.
+    Inspired by user @dlitz https://stackoverflow.com/users/253367/dlitz
+        in post https://stackoverflow.com/a/17511341
+    """
+    return -(a // -b)
