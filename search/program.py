@@ -1,6 +1,8 @@
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
+# temp - python -m search < test-vis1.csv
+
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 
@@ -29,6 +31,7 @@ def search(
     # board state in a human-readable format. If your terminal supports ANSI
     # codes, set the `ansi` flag to True to print a colour-coded version!
     print(render_board(board, target, ansi=False))
+    
 
     # Do some impressive AI stuff here to find the solution...
     # ...
@@ -75,8 +78,15 @@ def search(
         PlaceAction(Coord(5, 8), Coord(6, 8), Coord(7, 8), Coord(8, 8)),
     ]
 
+
+    # # temp : print out board state changes
+    # for i in temp:
+    #     board = make_place(board, i, PlayerColor.RED)
+    #     print(render_board(board, target, ansi=False))
+
     # print (valid_place(board,temp[0]))                        # temp
     # print (make_place(board, temp[0], PlayerColor.RED))       # temp
+
     return temp
 
 
@@ -204,10 +214,10 @@ def make_place(
     # Find all cells that need to be dropped (existing in full rows / cols)
     for r in placed_r:
         if free_cells(board, Coord(r,IRRELEVANT), "r") == 0:
-            to_clear.add([Coord(r,i) for i in range(BOARD_N)])
+            [to_clear.add(Coord(r,i)) for i in range(BOARD_N)]
     for c in placed_c:
         if free_cells(board, Coord(IRRELEVANT,c), "c") == 0:
-            to_clear.add([Coord(i,c) for i in range(BOARD_N)])
+            [to_clear.add(Coord(i,c)) for i in range(BOARD_N)]
 
     # Drop these cells from board
     for tile in to_clear:
