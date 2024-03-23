@@ -58,9 +58,26 @@ def tetrominoes(
     return t
 
 
+def tetrominoes_plus(c: Coord) -> list[Coord]:
+    """Takes a Coord c and generates a list of Place actions of all unique 4 
+    tiled "tetrominoes" that build off of this coordinate, that is, are adjacent
+    to the coordinate but do NOT include it.
+    List should always be of TODO un-calculated length - apparently 188?
+    """
+    t = []
+
+    for dir in [d.value for d in Direction]:
+        new = Coord.__add__(c, dir)
+        # Add surrounding tetrominoes, omitting centre tile
+        t += tetrominoes(new, [c])
+
+    return t
+
+
 # possible = tetrominoes(Coord(0,0), [Coord(1,0)])
-possible = tetrominoes(Coord(0,0), [Coord(0,0)])
-possible.sort()
-for p in possible:
-    print(p.__str__())
-print(len(possible))
+# possible = tetrominoes_plus(Coord(0,0))
+# possible = tetrominoes(Coord(0,0), [Coord(0,0)])
+# possible.sort()
+# for p in possible:
+#     print(p.__str__())
+# print(len(possible))

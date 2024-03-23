@@ -46,3 +46,8 @@ minimising the calculation required to assure that a board is unsolvable. Ideas 
 * Insert new board states into priority queue/linked list based on some g(state) + h(state)
 * Select new current state from front of queue
 * Repeat.
+
+### 2024.03.23
+* tetrominoes.py tetrominoes_plus() function added, along with coordinate filter for tetrominoes() - can now be used to 
+    generate around a tile as needed
+    
