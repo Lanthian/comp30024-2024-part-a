@@ -47,7 +47,25 @@ minimising the calculation required to assure that a board is unsolvable. Ideas 
 * Select new current state from front of queue
 * Repeat.
 
+
 ### 2024.03.23
 * tetrominoes.py tetrominoes_plus() function added, along with coordinate filter for tetrominoes() - can now be used to 
     generate around a tile as needed
     
+### 2024.03.24
+* PriorityQueue implementation for state nodes begun
+* tetrominoes_plus() duplicate pieces dropped
+### Part B thoughts
+PART B OF PROJECT BRAINSTORM
+* Estimate long term consequences of our moves by evaluating board state with utility function.
+    * Some measure of red vs blue squares on the board, with the consideration that not being able to move on your turn 
+    is -infinite (big loss!), and opponent not being able to move on their turn is +infinite (big win!!)
+* Depth of search ahead is a large consideration as it's exponential to a massive branching factor. Need to prune 
+    options EFFICIENTLY to stop this.
+* State evaluation only needed at node end, then minimax way back to current state?
+
+* Board state evaluation ideas for tetress:
+    * Number of red pieces vs blue vs air
+    * Furthest red from furthest red (most reach of the board)
+    * +Clearable "mostly blue" lines?
+    * -Clearable "mostly red" lines...
