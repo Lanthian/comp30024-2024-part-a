@@ -6,6 +6,8 @@
 
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
+from queue import PriorityQueue
+from .tetrominoes import *
 
 
 def search(
@@ -31,7 +33,7 @@ def search(
     # The render_board() function is handy for debugging. It will print out a
     # board state in a human-readable format. If your terminal supports ANSI
     # codes, set the `ansi` flag to True to print a colour-coded version!
-    print(render_board(board, target, ansi=False))
+    print(render_board(board, target, ansi=True))
     
 
     # Do some impressive AI stuff here to find the solution...
@@ -39,8 +41,21 @@ def search(
     # ... (your solution goes here!)
     # ...
 
+    successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
+    failed_Set = set()
+    for (coord, color) in board.items():
+        if color == PlayerColor.RED:
+            
+            f_n = heu2(board, coord, target)  # g(n) is 0 for starting nodes
+            successors.put((f_n, coord)) #need to adapt this to add board states rather than coords
+
+    while not successors.empty() and target in board: #after every node placement checks if target has not been deleted from board yet
+        a
+         
+
 
     # -- Start search by finding valid red tokens to build off of --
+    """
     starting_srcs = []              # [(Coord, int)]
     HEURISTIC_INDEX = 1
 
@@ -51,7 +66,7 @@ def search(
             # list would be better here. For now, append + sort will do...
             starting_srcs.append((coord, heu2(board, coord,target)))
             starting_srcs.sort(key=lambda x : x[HEURISTIC_INDEX])
-    
+    """
 
 
     # test prints
@@ -73,6 +88,7 @@ def search(
     # output format. Of course, you should instead return the result of your
     # search algorithm. Remember: if no solution is possible for a given input,
     # return `None` instead of a list.
+
     temp = [
         PlaceAction(Coord(2, 5), Coord(2, 6), Coord(3, 6), Coord(3, 7)),
         PlaceAction(Coord(1, 8), Coord(2, 8), Coord(3, 8), Coord(4, 8)),
@@ -80,10 +96,10 @@ def search(
     ]
 
 
-    # # temp : print out board state changes
+    # temp : print out board state changes
     for i in temp:
         board = make_place(board, i, PlayerColor.RED)
-        print(render_board(board, target, ansi=False))
+        print(render_board(board, target, ansi=True))
 
     # print (valid_place(board,temp[0]))                        # temp
     # print (make_place(board, temp[0], PlayerColor.RED))       # temp
@@ -103,8 +119,10 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     return row_distance + col_distance
 
 
+# need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
 
-# todo - temp naming and idea 
+
+# heuristic 2 in A* fulfills the h(n) (the heuristic estimate from n to the target)
 def heu2(board: dict[Coord, PlayerColor], 
         source: Coord, 
         target: Coord) -> int:
@@ -182,8 +200,9 @@ def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
         A binary int for whether or not given PlaceAction can be reasonably 
         performed on given board. Returns 1 if valid, 0 if not.
     """
-
-    # todo - Verify this is the only invalid way a piece can be placed
+    
+    # todo - Verify this is the only invalid way a piece can be placed. 
+    # AH - looks good to me, issues occur in other areas such as misinputting coords, not here
     for coord in place.coords:
         if coord in board:
             return 0

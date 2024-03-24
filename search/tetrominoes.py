@@ -14,7 +14,8 @@ def tetrominoes(c: Coord) -> list[Coord]:
     t = []
 
     in_progress = [[c]]
-    seen = []               # todo - cannot use set as lists are unhashable...
+    seen = []               
+    # todo - cannot use set as lists are unhashable...
     # Work through a queue of semi-assembled tetrominoes to build whole set
     while len(in_progress) > 0:
         curr = in_progress.pop(0)
