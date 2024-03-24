@@ -35,7 +35,7 @@ def tetrominoes(
     # Work through a queue of semi-assembled tetrominoes to build whole set
     while len(in_progress) > 0:
         curr = in_progress.pop(0)
-        curr.sort()
+        curr.sort()     # ensures each piece+place is always defined the same
         # Skip node if already seen
         if curr in seen:
             continue
@@ -69,16 +69,17 @@ def tetrominoes_plus(c: Coord) -> list[Coord]:
 
     for dir in [d.value for d in Direction]:
         new = Coord.__add__(c, dir)
-        # Add surrounding tetrominoes, omitting centre tile
-        t += tetrominoes(new, [c])
+        # Add surrounding tetrominoes, omitting centre tile, and dropping dups
+        t += [t1 for t1 in tetrominoes(new, [c]) if t1 not in t]
+        # (1*s, 1*z, 1*l, 1*j, 2*t) * 4 = 24 dropped as dup
 
     return t
 
 
 # possible = tetrominoes(Coord(0,0), [Coord(1,0)])
-# possible = tetrominoes_plus(Coord(0,0))
+possible = tetrominoes_plus(Coord(0,0))
 # possible = tetrominoes(Coord(0,0), [Coord(0,0)])
 # possible.sort()
 # for p in possible:
 #     print(p.__str__())
-# print(len(possible))
+print(len(possible))
