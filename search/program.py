@@ -50,7 +50,7 @@ def search(
             successors.put((f_n, coord)) #need to adapt this to add board states rather than coords
 
     while not successors.empty() and target in board: #after every node placement checks if target has not been deleted from board yet
-        a
+        b
          
 
 

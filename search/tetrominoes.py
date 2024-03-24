@@ -2,6 +2,7 @@
 # Project Part A: Single Player Tetress
 
 from core import Coord, Direction
+from program import PlaceAction
 # todo - change to .core for use in program.py perhaps?
 
 def tetrominoes(
@@ -83,3 +84,239 @@ possible = tetrominoes_plus(Coord(0,0))
 # for p in possible:
 #     print(p.__str__())
 print(len(possible))
+
+
+# NO PLACEACTIONS HAVE BEEN CODED YET, NEED TO HARD CODE ALL OF THESE
+
+def generate_I_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        # for vertical
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        
+        # for horizontal
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+    ]
+
+def generate_O_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),
+    ]
+
+def generate_T_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        # down
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),
+
+        #up
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),
+
+        #left
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),
+
+        #right
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),
+    ]
+
+def generate_J_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        #up
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #right
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #down
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #left
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+    ]
+
+def generate_L_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        #up
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #right
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #down
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+
+        #left
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)), 
+    ]
+
+def generate_Z_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        # horizontal
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)), 
+
+        #vertical
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)), 
+    ]
+
+def generate_S_touching(target: Coord) -> List[PlaceAction]:
+    return [
+        # horizontal
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)), 
+
+        #vertical
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)),  
+        PlaceAction(target.up(1), target, target.down(1), target.down(2)),  
+        PlaceAction(target.left(2), target.left(1), target, target.right(1)), 
+    ]
+
+def generate_all_touching_shapes(target: Coord) -> List[PlaceAction]:
+    touching_shapes = []
+    touching_shapes.extend(generate_I_touching(target))
+    touching_shapes.extend(generate_O_touching(target))
+    touching_shapes.extend(generate_T_touching(target))
+    touching_shapes.extend(generate_J_touching(target))
+    touching_shapes.extend(generate_L_touching(target))
+    touching_shapes.extend(generate_Z_touching(target))
+    touching_shapes.extend(generate_S_touching(target))
+    return touching_shapes
