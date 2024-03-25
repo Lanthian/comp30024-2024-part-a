@@ -41,6 +41,7 @@ def search(
     # ... (your solution goes here!)
     # ...
 
+    """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
     failed_Set = set()
     for (coord, color) in board.items():
@@ -51,7 +52,7 @@ def search(
 
     while not successors.empty() and target in board: #after every node placement checks if target has not been deleted from board yet
         b
-         
+    """
 
 
     # -- Start search by finding valid red tokens to build off of --
