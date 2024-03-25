@@ -10,6 +10,18 @@ from queue import PriorityQueue
 from .tetrominoes import *
 
 
+class State():
+    board: dict[Coord, PlayerColor]
+    path: list[PlaceAction]
+    tile: Coord
+    g: int                              # current actions count 
+    h: int                              # estimated remaining actions
+
+    @property
+    def cost(self) -> int:
+        return self.g+self.h
+
+
 def search(
     board: dict[Coord, PlayerColor], 
     target: Coord
