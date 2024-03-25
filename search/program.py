@@ -71,7 +71,7 @@ def search(
 
 
     # test prints
-    print(starting_srcs)                        # temp
+    # print(starting_srcs)                        # temp
     print(free_cells(board, target, "r"))       # temp
 
     # maybe find open air neighbours of these points instead...

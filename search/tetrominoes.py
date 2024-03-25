@@ -1,8 +1,7 @@
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
-from core import Coord, Direction
-from program import PlaceAction
+from .core import Coord, Direction, PlaceAction
 # todo - change to .core for use in program.py perhaps?
 
 def tetrominoes(
