@@ -7,7 +7,7 @@ from .core import Coord, Direction, PlaceAction
 def tetrominoes(
         c: Coord, 
         avoid_coords: list[Coord]=[]
-) -> list[list[Coord]]:
+) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that include this coordinate, relating to the board size
     defined in core.py. List should be of length 76 be default.
@@ -44,8 +44,9 @@ def tetrominoes(
         else:
             seen.append(curr)
             if len(curr) == 4:
-                # valid tetromino
-                t.append(curr)
+                # valid tetromino - convert to PlaceAction
+                # todo -
+                t.append(PlaceAction(curr[0],curr[1],curr[2],curr[3]))
                 continue
         
         # Loop through each direction for each piece, attaching a new block
@@ -59,7 +60,7 @@ def tetrominoes(
     return t
 
 
-def tetrominoes_plus(c: Coord) -> list[Coord]:
+def tetrominoes_plus(c: Coord) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that build off of this coordinate, that is, are adjacent
     to the coordinate but do NOT include it.
