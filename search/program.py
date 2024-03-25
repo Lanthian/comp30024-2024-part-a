@@ -112,12 +112,10 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     """Heuristic: Finds the minimum distance from a source coord to either of a 
     target coord's axes. Returns this integer.
     """
-    # todo - should subtract(?) summed additional measure that considers how 
-    # many filled cells the more important row or column already has
-    row_distance = min(abs(target.c - source.c), BOARD_N - abs(target.c - source.c))
-    col_distance = min(abs(target.c - source.c), BOARD_N - abs(target.c - source.c))
+    row_distance = abs_distance(target.c,source.c)
+    col_distance = abs_distance(target.r,source.r)
     
-    return row_distance + col_distance
+    return min(row_distance, col_distance)
 
 
 # need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
@@ -147,8 +145,8 @@ def heu2(board: dict[Coord, PlayerColor],
     P_SIZE = 4                                  # 4 tiles in a tetromino
     # In terms of reaching a filled axis:
     # xy = x pieces then y pieces, yx = y pieces then x pieces
-    xy = ceildiv(abs(target.c-source.c) + free_cells(board,target,"c"), P_SIZE)
-    yx = ceildiv(abs(target.r-source.r) + free_cells(board,target,"r"), P_SIZE)
+    xy = ceildiv(abs_distance(target.c,source.c) + free_cells(board,target,"c"), P_SIZE)
+    yx = ceildiv(abs_distance(target.r,source.r) + free_cells(board,target,"r"), P_SIZE)
     return min(xy, yx)
 
 
@@ -201,9 +199,6 @@ def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
         A binary int for whether or not given PlaceAction can be reasonably 
         performed on given board. Returns 1 if valid, 0 if not.
     """
-    
-    # todo - Verify this is the only invalid way a piece can be placed. 
-    # AH - looks good to me, issues occur in other areas such as misinputting coords, not here
     for coord in place.coords:
         if coord in board:
             return 0
@@ -269,3 +264,11 @@ def ceildiv(a, b):
         in post https://stackoverflow.com/a/17511341
     """
     return -(a // -b)
+
+
+def abs_distance(a, b):
+    """Takes in two numbers and returns the minimum absolute distance between 
+    them, considering a scale of BOARD_N that loops infinitely.
+    """
+    absolute = abs(a-b)
+    return min(absolute, BOARD_N-absolute)
