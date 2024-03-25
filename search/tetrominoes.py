@@ -5,8 +5,8 @@ from .core import Coord, Direction, PlaceAction
 # todo - change to .core for use in program.py perhaps?
 
 def tetrominoes(
-        c: Coord, 
-        avoid_coords: list[Coord]=[]
+        c: Coord,
+        tiles: set[Coord]=set()
 ) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that include this coordinate, relating to the board size
@@ -16,8 +16,8 @@ def tetrominoes(
 
     Parameters:
         `c`: a Coord on which place actions should be centred around (including)
-        `avoid_coords`: list of Coords which should not be included in any place 
-            actions and will limit the size of the output - empty by default
+        `tiles`: set of Coords which should not be included in any place 
+            actions and will limit the size of the output - empty by default 
     
     Returns:
         A list of lists of Coords (list of place actions) or in the case that 
@@ -26,8 +26,8 @@ def tetrominoes(
     # todo- insert into sorted lists rather than inserting and sorting each time
     t = []
 
-    # Check if no possible tetrominos to generate from starting coord
-    if c in avoid_coords: return t
+    # Safety check if no possible tetrominos to generate from starting coord
+    if c in tiles: return t
 
     in_progress = [[c]]
     seen = []               
@@ -54,31 +54,42 @@ def tetrominoes(
             for dir in [d.value for d in Direction]:
                 new = Coord.__add__(coord, dir)
                 # Avoid duplicating existing and including disallowed coords
-                if (new in curr) or (new in avoid_coords): continue
+                if (new in curr) or (new in tiles): continue
                 in_progress.append(curr + [new])
 
     return t
 
 
-def tetrominoes_plus(c: Coord) -> list[PlaceAction]:
+def tetrominoes_plus(
+    c: Coord,
+    tiles: set[Coord]=set()
+) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that build off of this coordinate, that is, are adjacent
-    to the coordinate but do NOT include it.
+    to the coordinate but do NOT include it. Additionally, can take a 
+    (empty by default) to check if neighbouring cells are already filled and 
+    shorten calculation.
     List should always be of TODO un-calculated length - apparently 188?
     """
     t = []
 
+    # Disinclude middle coord to form pattern
+    if c not in tiles: tiles.add(c)
+
     for dir in [d.value for d in Direction]:
         new = Coord.__add__(c, dir)
+
         # Add surrounding tetrominoes, omitting centre tile, and dropping dups
-        t += [t1 for t1 in tetrominoes(new, [c]) if t1 not in t]
+        t += [t1 for t1 in tetrominoes(new, tiles) if t1 not in t]
         # (1*s, 1*z, 1*l, 1*j, 2*t) * 4 = 24 dropped as dup
 
     return t
 
 
 # possible = tetrominoes(Coord(0,0), [Coord(1,0)])
+# possible = tetrominoes_plus(Coord(0,0), set())
 possible = tetrominoes_plus(Coord(0,0))
+# possible = tetrominoes_plus(Coord(0,0), {Coord(1,0), Coord(1,1)})
 # possible = tetrominoes(Coord(0,0), [Coord(0,0)])
 # possible.sort()
 # for p in possible:
