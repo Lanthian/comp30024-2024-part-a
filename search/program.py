@@ -8,14 +8,23 @@ from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 from queue import PriorityQueue
 from .tetrominoes import *
+from dataclasses import dataclass
 
 
+@dataclass(frozen=True)
 class State():
+    """
+    A dataclass representing a current "state" of the game, where `board` stores
+    the game board as of current, `path` the list of PlaceActions to get to this
+    board, `tile` the current cell of interest to build from, `g` the cost of
+    moves to get here, `h` a heuristic prediction of best case moves to get to
+    end goal.
+    """
     board: dict[Coord, PlayerColor]
     path: list[PlaceAction]
     tile: Coord
-    g: int                              # current actions count 
-    h: int                              # estimated remaining actions
+    g: int                          # current actions count, todo - maybe redundant with len(path)?
+    h: int                          # estimated remaining actions
 
     @property
     def cost(self) -> int:
@@ -53,6 +62,20 @@ def search(
     # ... (your solution goes here!)
     # ...
 
+    q = PriorityQueue()
+    for (coord, color) in board.items():
+        if color == PlayerColor.RED:
+            h = heu2(board, coord, target)
+            s = State(board, [], coord, 0, h)
+            print(s.cost)
+            q.put(s.cost, s)
+    # State(board, [], )
+    # s.put()
+    
+    # print(q.empty())
+    # while len(q) > 0:
+
+
     """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
     failed_Set = set()
@@ -84,7 +107,7 @@ def search(
 
     # test prints
     # print(starting_srcs)                        # temp
-    print(free_cells(board, target, "r"))       # temp
+    # print(F"Free cells - {free_cells(board, target, "r")}")       # temp
 
     # maybe find open air neighbours of these points instead...
 
@@ -110,9 +133,9 @@ def search(
 
 
     # temp : print out board state changes
-    for i in temp:
-        board = make_place(board, i, PlayerColor.RED)
-        print(render_board(board, target, ansi=True))
+    # for i in temp:
+    #     board = make_place(board, i, PlayerColor.RED)
+    #     print(render_board(board, target, ansi=True))
 
     # print (valid_place(board,temp[0]))                        # temp
     # print (make_place(board, temp[0], PlayerColor.RED))       # temp
@@ -284,3 +307,9 @@ def abs_distance(a, b):
     """
     absolute = abs(a-b)
     return min(absolute, BOARD_N-absolute)
+
+
+def check_win(target: Coord, board: dict[Coord,PlayerColor]) -> bool:
+    """Function added to make checking goal state more readable
+    """
+    return target in board
