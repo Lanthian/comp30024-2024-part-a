@@ -62,20 +62,31 @@ def search(
     # ... (your solution goes here!)
     # ...
 
+
+    ### attempt 2!
+    """
     q = PriorityQueue()
     for (coord, color) in board.items():
         if color == PlayerColor.RED:
             h = heu2(board, coord, target)
             s = State(board, [], coord, 0, h)
-            print(s.cost)
-            q.put(s.cost, s)
-    # State(board, [], )
-    # s.put()
+            # print(s.cost)
+            q.put((s, s.cost))      # > comparison not allowed for state, find a new way to do this...
+            # todo - might need to make our own queue
     
     # print(q.empty())
     # while len(q) > 0:
 
-
+    # Work through queue for as long as elements exist and goal not met
+    while not q.empty():
+        curr = q.get()
+        print(curr)
+    """
+    # Notes: I think we'll need to define our own priorityqueue - shouldn't be 
+    # too hard but for the inbuild one it doesnt seem to work with inserting
+    # items by a value separate to them. Could also somehow define the dataclass
+    # so it returns cost(self) when >,<,== called on it.
+        
     """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
     failed_Set = set()
