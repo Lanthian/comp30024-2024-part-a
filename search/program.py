@@ -2,16 +2,18 @@
 # Project Part A: Single Player Tetress
 
 # todo/temp - Terminal input
-# temp - python -m search < test-vis1.csv
+# python -m search < test-vis1.csv
 
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 from queue import PriorityQueue
 from .tetrominoes import *
 from dataclasses import dataclass
+from functools import total_ordering
 
 
 @dataclass(frozen=True)
+@total_ordering
 class State():
     """
     A dataclass representing a current "state" of the game, where `board` stores
@@ -29,7 +31,12 @@ class State():
     @property
     def cost(self) -> int:
         return self.g+self.h
-
+    
+    def __eq__(self, other):
+        return self.cost == other.cost
+    def __lt__(self, other):
+        return self.cost < other.cost
+    
 
 def search(
     board: dict[Coord, PlayerColor], 
@@ -64,24 +71,51 @@ def search(
 
 
     ### attempt 2!
-    """
-    q = PriorityQueue()
+    # ========================================================================= WIP
+    """ q = PriorityQueue()
+    seen = []
     for (coord, color) in board.items():
         if color == PlayerColor.RED:
+            # Find heuristic cost of coord for state
             h = heu2(board, coord, target)
             s = State(board, [], coord, 0, h)
-            # print(s.cost)
-            q.put((s, s.cost))      # > comparison not allowed for state, find a new way to do this...
-            # todo - might need to make our own queue
+            # Skip preexisting states
+            if s in seen: continue
+            # States comparable via total_ordering so can be inserted directly
+            q.put(s)
+            seen.append(s)
     
-    # print(q.empty())
-    # while len(q) > 0:
 
     # Work through queue for as long as elements exist and goal not met
     while not q.empty():
         curr = q.get()
-        print(curr)
-    """
+        print("a")
+        print(render_board(curr.board, target, True))
+
+        # Return if done - guaranteed least or equal least cost path via queue
+        if check_win(target, curr.board): return curr.path
+
+        # Generate next moves from this step and enqueue them
+        next_moves = tetrominoes_plus(curr.tile, curr.board)
+        for move in next_moves:
+            # If move is valid - enqueue following states
+            if valid_place(curr.board, move):
+                next_board = make_place(curr.board, move, PlayerColor.RED)
+
+                # Queue a state for each new
+                for (coord, color) in next_board.items():
+                    if color == PlayerColor.RED:
+                        h = heu2(next_board, coord, target)
+                        s = State(next_board, curr.path + [move], coord, curr.g+1, h)
+                        if s in seen: continue
+                        q.put(s)
+                        seen.append(s)
+        
+
+        print(curr.cost)
+        print() """
+    # ========================================================================= WIP
+   
     # Notes: I think we'll need to define our own priorityqueue - shouldn't be 
     # too hard but for the inbuild one it doesnt seem to work with inserting
     # items by a value separate to them. Could also somehow define the dataclass
@@ -321,6 +355,7 @@ def abs_distance(a, b):
 
 
 def check_win(target: Coord, board: dict[Coord,PlayerColor]) -> bool:
-    """Function added to make checking goal state more readable
+    """Function added to make checking goal state more readable. Returns true if
+    goal has been reached, false if not.
     """
-    return target in board
+    return target not in board
