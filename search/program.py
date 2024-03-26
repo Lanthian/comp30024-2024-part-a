@@ -12,7 +12,8 @@ from dataclasses import dataclass
 from functools import total_ordering
 
 
-@dataclass(frozen=True)
+# @dataclass(frozen=True)
+@dataclass(frozen=True, slots=True)
 @total_ordering
 class State():
     """
@@ -33,7 +34,11 @@ class State():
         return self.g+self.h
     
     def __eq__(self, other):
-        return self.cost == other.cost
+        return (self.board == other.board and
+                self.tile == other.tile and
+                self.g == other.g and
+                self.h == other.h)
+                # path doesn't matter if cost is equal
     def __lt__(self, other):
         return self.cost < other.cost
     
@@ -62,6 +67,7 @@ def search(
     # board state in a human-readable format. If your terminal supports ANSI
     # codes, set the `ansi` flag to True to print a colour-coded version!
     print(render_board(board, target, ansi=True))
+    print("===============================================================")
     
 
     # Do some impressive AI stuff here to find the solution...
@@ -72,35 +78,42 @@ def search(
 
     ### attempt 2!
     # ========================================================================= WIP
-    """ q = PriorityQueue()
+    """ pq = PriorityQueue()
     seen = []
     for (coord, color) in board.items():
         if color == PlayerColor.RED:
+            print(f"bb + {coord}")
             # Find heuristic cost of coord for state
             h = heu2(board, coord, target)
             s = State(board, [], coord, 0, h)
             # Skip preexisting states
-            if s in seen: continue
+            if s in seen: 
+                print("????")
+                continue
             # States comparable via total_ordering so can be inserted directly
-            q.put(s)
+            pq.put(s)
             seen.append(s)
     
-
+    i = 0
     # Work through queue for as long as elements exist and goal not met
-    while not q.empty():
-        curr = q.get()
-        print("a")
-        print(render_board(curr.board, target, True))
+    while not pq.empty():
+        curr = pq.get()
+        print(f"Lap: {i}")
+        i+= 1
+        # print(render_board(curr.board, target, True))
+        print(f"Path: {curr.path}")
 
-        # Return if done - guaranteed least or equal least cost path via queue
-        if check_win(target, curr.board): return curr.path
+        # Check goal & return if done - guaranteed least/equal least cost path 
+        if check_win(target, curr.board):
+            print(render_board(board,target,True))      # todo -temp
+            return curr.path
 
         # Generate next moves from this step and enqueue them
         next_moves = tetrominoes_plus(curr.tile, curr.board)
         for move in next_moves:
             # If move is valid - enqueue following states
             if valid_place(curr.board, move):
-                next_board = make_place(curr.board, move, PlayerColor.RED)
+                next_board = make_place(curr.board.copy(), move, PlayerColor.RED)
 
                 # Queue a state for each new
                 for (coord, color) in next_board.items():
@@ -108,19 +121,15 @@ def search(
                         h = heu2(next_board, coord, target)
                         s = State(next_board, curr.path + [move], coord, curr.g+1, h)
                         if s in seen: continue
-                        q.put(s)
+                        pq.put(s)
                         seen.append(s)
         
 
         print(curr.cost)
-        print() """
+        print()
+
+        #todo - SUPER INEFFICIENT, but basic idea layed out """
     # ========================================================================= WIP
-   
-    # Notes: I think we'll need to define our own priorityqueue - shouldn't be 
-    # too hard but for the inbuild one it doesnt seem to work with inserting
-    # items by a value separate to them. Could also somehow define the dataclass
-    # so it returns cost(self) when >,<,== called on it.
-        
     """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
     failed_Set = set()
