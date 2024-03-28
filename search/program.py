@@ -74,7 +74,26 @@ def search(
     # ...
     # ... (your solution goes here!)
     # ...
+    
+    #28/04/2024. Sorry haven't done much work, will get on it especially over break - Anthony
+    """
+    Plan:
+    scan all red coords and simultaneously calculate heuristic manhattan value.
+    Generate state and store state node.
+    Skip pre-existing states, removes possiblity of infinite loop of generating
+    Insert into priority queue with values
 
+    For each consequent generation:
+    1) Dequeue node
+    2) generate expanded nodes and insert using heuristic + step cost as evaluation functions
+    3) Insert. 
+    4) Repeatedly scan board state to identify if target coord is gone, if so return with this node state.
+    5) Function to get path of this node state and submit these place actions
+
+    Talked to people in my tutorial and main issue is an admissable heuristic, especially with the possibility of needing
+    to clear multiple axes first. Manhatten distance won't cut it.
+    WILL WORK ON IT BEGINNING TOMORROW AND GRIND. Want to get this done before Monday
+    """
 
     ### attempt 2!
     # ========================================================================= WIP

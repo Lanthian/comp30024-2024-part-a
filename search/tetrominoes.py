@@ -97,7 +97,7 @@ possible = tetrominoes_plus(Coord(0,0))
 print(len(possible))
 
 
-# NO PLACEACTIONS HAVE BEEN CODED YET, NEED TO HARD CODE ALL OF THESE
+# Elementary appraoch (hard-coding)
 
 def generate_I_touching(target: Coord) -> list[PlaceAction]:
     return [
