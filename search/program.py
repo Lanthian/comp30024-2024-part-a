@@ -27,10 +27,10 @@ class State():
     path: list[PlaceAction]
     tile: Coord
     g: int                          # current actions count, todo - maybe redundant with len(path)?
-    h: int                          # estimated remaining actions
+    h: float                          # estimated remaining actions; cost to goal
 
     @property
-    def cost(self) -> int:
+    def cost(self) -> float:
         return self.g+self.h
     
     def __eq__(self, other):
@@ -41,6 +41,12 @@ class State():
                 # path doesn't matter if cost is equal
     def __lt__(self, other):
         return self.cost < other.cost
+    
+    """ in the case of creating a hash function and using state in a set.
+    def __hash__(self):
+        # Hash is a combination of board, tile, g, and h
+        return hash((self.board, self.tile, self.g, self.h))
+    """
     
 
 def search(
@@ -94,20 +100,22 @@ def search(
     to clear multiple axes first. Manhatten distance won't cut it.
     WILL WORK ON IT BEGINNING TOMORROW AND GRIND. Want to get this done before Monday
     """
-
+    
     ### attempt 2!
     # ========================================================================= WIP
-    """ pq = PriorityQueue()
+    
+    pq = PriorityQueue()
     seen = []
     for (coord, color) in board.items():
         if color == PlayerColor.RED:
             print(f"bb + {coord}")
             # Find heuristic cost of coord for state
-            h = heu2(board, coord, target)
+            h = heu3(board, coord, target)
+            #h = heu2(board, coord, target)
             s = State(board, [], coord, 0, h)
             # Skip preexisting states
             if s in seen: 
-                print("????")
+                print("duplicate found")
                 continue
             # States comparable via total_ordering so can be inserted directly
             pq.put(s)
@@ -118,13 +126,13 @@ def search(
     while not pq.empty():
         curr = pq.get()
         print(f"Lap: {i}")
-        i+= 1
+        i += 1
         # print(render_board(curr.board, target, True))
         print(f"Path: {curr.path}")
 
         # Check goal & return if done - guaranteed least/equal least cost path 
-        if check_win(target, curr.board):
-            print(render_board(board,target,True))      # todo -temp
+        if check_win(target, curr.board): 
+            # print(render_board(board,target,True))      # todo -temp
             return curr.path
 
         # Generate next moves from this step and enqueue them
@@ -137,7 +145,8 @@ def search(
                 # Queue a state for each new
                 for (coord, color) in next_board.items():
                     if color == PlayerColor.RED:
-                        h = heu2(next_board, coord, target)
+                        h = heu3(next_board, coord, target)
+                        #h = heu2(next_board, coord, target)
                         s = State(next_board, curr.path + [move], coord, curr.g+1, h)
                         if s in seen: continue
                         pq.put(s)
@@ -147,7 +156,8 @@ def search(
         print(curr.cost)
         print()
 
-        #todo - SUPER INEFFICIENT, but basic idea layed out """
+        #todo - SUPER INEFFICIENT, but basic idea layed out
+    
     # ========================================================================= WIP
     """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
@@ -228,6 +238,47 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
 
 # need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
 
+# heuristic 3 h(n)
+def heu3(board: dict[Coord, PlayerColor], 
+        source: Coord, 
+        target: Coord) -> float:
+    """
+    Calculate the heuristic distance from start to goal on a grid that wraps around
+    at the edges, considering pieces.
+
+    :param start: A tuple (x, y) representing the start coordinate.
+    :param goal: A tuple (x, y) representing the goal coordinate.
+    :return: The estimated number of pieces needed to reach the goal, rounded to 1 decimal place
+
+    Chose not to include obstacles to not overestimate cost, and increase complexity/runtime by exploring unecessary pathways
+    """
+    # Manhattan distances
+    dx = abs(target.c - source.c)
+    dy = abs(target.r - source.r)
+
+    # Wraparound distances
+    dx_wrap = BOARD_N - dx
+    dy_wrap = BOARD_N - dy
+
+    min_dx = min(dx, dx_wrap)
+    min_dy = min(dy, dy_wrap)
+
+    total_distance = min_dx + min_dy
+
+    # Adjust by the maximum coverage of a Tetris piece
+    estimated_pieces = total_distance / 4
+
+    # free 
+    free_in_row = free_cells(board, target, "row")
+    free_in_col = free_cells(board, target, "col")
+    
+    free_path_weight = (min(free_in_row, free_in_col))/BOARD_N 
+    
+    return estimated_pieces + free_path_weight
+
+    # Ceiling to ensure at least one piece is needed if there's any distance
+    return max(1, round(estimated_pieces, 1))
+
 
 # heuristic 2 in A* fulfills the h(n) (the heuristic estimate from n to the target)
 def heu2(board: dict[Coord, PlayerColor], 
@@ -283,7 +334,7 @@ def free_cells(
             print("ERROR free_cells: invalid axis specified.")
             return None
 
-    # Subtract occupied cells to find free count
+    # Subtract occupied cells to find free cdount
     for i in range(BOARD_N):
         if axis_iterator(i) in board:
             free -= 1
