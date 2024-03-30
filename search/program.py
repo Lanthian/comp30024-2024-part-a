@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from functools import total_ordering
 
 
+DEBUG_PRINT = True
+
 # @dataclass(frozen=True)
 @dataclass(frozen=True, slots=True)
 @total_ordering
@@ -77,12 +79,6 @@ def search(
     print(render_board(board, target, ansi=True))
     print("===============================================================")
     
-
-    # Do some impressive AI stuff here to find the solution...
-    # ...
-    # ... (your solution goes here!)
-    # ...
-    
     #28/04/2024. Sorry haven't done much work, will get on it especially over break - Anthony
     """
     Plan:
@@ -116,8 +112,6 @@ def search(
     pq.put(s)
     seen.append(board)          # having this as a list gets expensive
 
-
-
     """ for (coord, color) in board.items():
         if color == PlayerColor.RED:
             print(f"bb + {coord}")
@@ -134,33 +128,25 @@ def search(
             pq.put(s)
             seen.append(s) """
 
-    LIMIT = 21
-    i = 0
-    # print("hello?")
     # Work through queue for as long as elements exist and goal not met
-    """ print(check_win(target, board))
-    n = make_place(board, PlaceAction(Coord(2,5), Coord(2,6), Coord(2,7), Coord(2,8)), PlayerColor.RED)
-    print(render_board(n, target, True))
-    print(check_win(target, n))
-    print("yeah?") """
+    if DEBUG_PRINT: i = 0
     while not pq.empty():
-        # if i == LIMIT: return []               # todo - temporary limiter
-        print("//Getting")
         curr = pq.get()
-        print(f"===Lap: {i} ===")
-        i += 1
-        print(render_board(curr.board, target, True))
-        print(f"Path length: {curr.g}, Heu: {curr.h}")
+        if DEBUG_PRINT: 
+            print(f"===Lap: {i}, Queue Size: {pq.qsize()} ===")
+            i += 1
+            print(render_board(curr.board, target, True))
+            print(f"Path length: {curr.g}, Heu: {curr.h}")
 
         # Check goal & return if done - guaranteed least/equal least cost path 
-        if check_win(target, curr.board): 
-            # print(render_board(board,target,True))      # todo -temp
+        if target not in curr.board:
+            # (A) best solution found!
             return curr.path
 
         # Generate next moves from this step and enqueue them
-        print("//Generating")
+        if DEBUG_PRINT: print("//Generating...")
         moves = possible_moves(curr.board, PlayerColor.RED)
-        print(f"//Inserting - {len(moves)}")
+        if DEBUG_PRINT: print(f"//Inserting {len(moves)} moves")
         for move in moves:
             new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
@@ -170,46 +156,8 @@ def search(
             pq.put(s)
             seen.append(new_board)
         
-        print(f"Queue: {pq.qsize()}")
-        print(pq.empty())
-
-    print("HUZZAH")
-    return []
-    print()
-    
-
-    print(curr.cost)
-    print()
-
-    #todo - SUPER INEFFICIENT, but basic idea layed out
-
-    # ========================================================================= WIP
-    """
-    successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
-    failed_Set = set()
-    for (coord, color) in board.items():
-        if color == PlayerColor.RED:
-            
-            f_n = heu2(board, coord, target)  # g(n) is 0 for starting nodes
-            successors.put((f_n, coord)) #need to adapt this to add board states rather than coords
-
-    while not successors.empty() and target in board: #after every node placement checks if target has not been deleted from board yet
-        b
-    """
-
-
-    # Here we're returning "hardcoded" actions as an example of the expected
-    # output format. Of course, you should instead return the result of your
-    # search algorithm. Remember: if no solution is possible for a given input,
-    # return `None` instead of a list.
-
-    temp = [
-        # PlaceAction(Coord(2,5), Coord(2,6), Coord(2,7), Coord(2,8))
-        PlaceAction(Coord(2, 5), Coord(2, 6), Coord(3, 6), Coord(3, 7)),
-        PlaceAction(Coord(1, 8), Coord(2, 8), Coord(3, 8), Coord(4, 8)),
-        PlaceAction(Coord(5, 8), Coord(6, 8), Coord(7, 8), Coord(8, 8)),
-    ]
-
+    # If here - no solutions found in all possible board expansions
+    return None
 
     # temp : print out board state changes
     # for i in temp:
@@ -224,6 +172,10 @@ def search(
 
 def possible_moves(board: dict[Coord, PlayerColor], 
                    player: PlayerColor) -> list[PlaceAction]:
+    """Takes a game `board` and a `player` defined by their PlayerColor and
+      returns all possible next moves for said player in the form of a list of 
+      PlaceActions.
+    """
     moves = set()
     for (coord, color) in board.items():
         if color == player:
@@ -233,7 +185,7 @@ def possible_moves(board: dict[Coord, PlayerColor],
     return list(moves)
 
 
-
+# todo: REDR - currently unused
 def distance_from_axes(source: Coord, target: Coord) -> int:
     """Heuristic: Finds the minimum distance from a source coord to either of a 
     target coord's axes. Returns this integer.
@@ -242,7 +194,6 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     col_distance = abs_distance(target.r,source.r)
     
     return min(row_distance, col_distance)
-
 
 
 def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
@@ -271,7 +222,6 @@ def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
             t = heu2(board, tile, target)
             if t < best: best = t
     return best
-
 
 
 # need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
@@ -384,6 +334,7 @@ def free_cells(
     return free
 
 
+# todo: REDR - currently unused as piece generation altered to not need this
 def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
     """
     Checks is a tetromino placement is valid for a given board state. Assumes
@@ -459,6 +410,7 @@ def make_place(
     return board
 
 
+# todo: REDR - currently unused, opting for floats instead
 def ceildiv(a, b):
     """Helper math function to perform ceiling division.
     Inspired by user @dlitz https://stackoverflow.com/users/253367/dlitz
@@ -475,6 +427,7 @@ def abs_distance(a, b):
     return min(absolute, BOARD_N-absolute)
 
 
+# todo: REDR - currently unused, feels like to makes easy code more complex
 def check_win(target: Coord, board: dict[Coord,PlayerColor]) -> bool:
     """Function added to make checking goal state more readable. Returns true if
     goal has been reached, false if not.

@@ -69,3 +69,14 @@ PART B OF PROJECT BRAINSTORM
     * Furthest red from furthest red (most reach of the board)
     * +Clearable "mostly blue" lines?
     * -Clearable "mostly red" lines...
+
+
+### 2024.03.30
+SOLVED! Issue was, heuristic was returning true value +11 for the now cleared row whenever it reached a goal state.
+  In turn, every possible solution was being queued to the end of the priority queue - we were checking every single 
+  node of the graph and stopping shy every time we found a solution to go check others. Bit silly, but glad it's solved
+  now.
+Solutions CAN now be output - not yet optimal. We should check between equal priority states if any are the goal before
+  beginning to expand them all. Plus, a better heuristic can definitely be developed and we can possibly cut down on 
+  which tetrominoes are generated for each tile of a board, rather than brute-force generating all of them and queueing
+  them differently.
