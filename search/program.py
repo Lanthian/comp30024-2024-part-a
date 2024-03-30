@@ -116,8 +116,6 @@ def search(
     pq.put(s)
     seen.append(s)
 
-    print(h)
-    return []
 
 
     """ for (coord, color) in board.items():
@@ -139,6 +137,7 @@ def search(
     i = 0
     # Work through queue for as long as elements exist and goal not met
     while not pq.empty():
+        if i == 30: return []               # todo - temporary limiter
         print("//Getting")
         curr = pq.get()
         print(f"Lap: {i}")
@@ -153,42 +152,59 @@ def search(
 
         # Generate next moves from this step and enqueue them
         print("//Generating")
-        for (tile, color) in board.items():
-            if color == PlayerColor.RED:
-                
-                #### OLD CODE =====================================================================================================================================
-                next_moves = tetrominoes_plus(curr.tile, curr.board)
-                print("//Sorting through - size: ", len(next_moves))    
-                # todo -temp, SLOWS DOWN HERE VVVVV
-                i = 0
-                for move in next_moves:
-                    print(f"m{i}")
-                    i+=1
-                    # If move is valid - enqueue following states
-                    if valid_place(curr.board, move):
-                        next_board = make_place(curr.board.copy(), move, PlayerColor.RED)
-                        # Queue a state for each new
-                        # print("t", end="")
-                        print(f"Itmes - {len(next_board.items())}, PQ - {pq.qsize()}, Seen - {len(seen)}")
-                        for (coord, color) in next_board.items():
-                            if color == PlayerColor.RED:
-                                h = heu3(next_board, coord, target)
-                                #h = heu2(next_board, coord, target)
-                                s = State(next_board, curr.path + [move], coord, curr.g+1, h, count)
-                                count -= 1
-                                if s in seen: continue
-                                # todo - guess it's happening here
-                                pq.put(s)
-                                seen.append(s)
-                        # print(" - done!")
-        print()
+        moves = possible_moves(board, PlayerColor.RED)
+        print(f"//Inserting - {len(moves)}")
+        for move in moves:
+            new_board = make_place(board.copy(), move, PlayerColor.RED)
+            # Skip duplciate boards
+            # if new_board in seen: continue
+            s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
+            count -= 1
+            pq.put(s)
+            seen.append(s)
         
+        print(f"Queue: {pq.qsize()}")
 
-        print(curr.cost)
-        print()
+    return []
 
-        #todo - SUPER INEFFICIENT, but basic idea layed out
+
+
+    """for (tile, color) in board.items():
+        if color == PlayerColor.RED:
+            
+            #### OLD CODE =====================================================================================================================================
+            next_moves = tetrominoes_plus(curr.tile, curr.board)
+            print("//Sorting through - size: ", len(next_moves))    
+            # todo -temp, SLOWS DOWN HERE VVVVV
+            i = 0
+            for move in next_moves:
+                print(f"m{i}")
+                i+=1
+                # If move is valid - enqueue following states
+                if valid_place(curr.board, move):
+                    next_board = make_place(curr.board.copy(), move, PlayerColor.RED)
+                    # Queue a state for each new
+                    # print("t", end="")
+                    print(f"Itmes - {len(next_board.items())}, PQ - {pq.qsize()}, Seen - {len(seen)}")
+                    for (coord, color) in next_board.items():
+                        if color == PlayerColor.RED:
+                            h = heu3(next_board, coord, target)
+                            #h = heu2(next_board, coord, target)
+                            s = State(next_board, curr.path + [move], coord, curr.g+1, h, count)
+                            count -= 1
+                            if s in seen: continue
+                            # todo - guess it's happening here
+                            pq.put(s)
+                            seen.append(s)
+                    # print(" - done!") """
+    print()
     
+
+    print(curr.cost)
+    print()
+
+    #todo - SUPER INEFFICIENT, but basic idea layed out
+
     # ========================================================================= WIP
     """
     successors = PriorityQueue() #initilaise priority queue for nodes to be explored, https://www.educative.io/answers/what-is-the-python-priority-queue for how PQ works
@@ -257,6 +273,18 @@ def search(
     return temp
 
 
+def possible_moves(board: dict[Coord, PlayerColor], 
+                   player: PlayerColor) -> list[PlaceAction]:
+    moves = set()
+    for (coord, color) in board.items():
+        if color == player:
+            # duplicate moves generated and ignored here - todo improve
+            moves.update(tetrominoes_plus(coord, board.keys()))
+
+    return list(moves)
+
+
+
 def distance_from_axes(source: Coord, target: Coord) -> int:
     """Heuristic: Finds the minimum distance from a source coord to either of a 
     target coord's axes. Returns this integer.
@@ -269,6 +297,20 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
 
 
 def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
+    """A heuristic - finds the distance (in tiles, not pieces) from any possible 
+    source coord to either of a target coord's axes PLUS the number of free 
+    cells to fill. 
+
+    Parameters:
+        `board`: a dictionary representing the initial board state, mapping
+            coordinates to "player colours". The keys are `Coord` instances,
+            and the values are `PlayerColor` instances.  
+        `target`: the target BLUE coordinate to remove from the board.
+    
+    Returns:
+        An admissible heuristic float that can be rounded up to optimal least 
+        possible moves to clear target coordinate.
+    """
     best = 15   # Worst possible h value
     # Iterate through red tiles in board
     for (tile, color) in board.items():
@@ -411,12 +453,12 @@ def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
 def make_place(
     board: dict[Coord, PlayerColor], 
     place: PlaceAction, 
-    color: PlayerColor
+    color: PlayerColor,
 ) -> dict[Coord, PlayerColor]:
     """
     Assumes the place actions have been validated first, otherwise it can write
     over the top of existing cells. Places tetrominoes on a board, clearing rows
-    if filled. 
+    if filled. Acts in place - use with .copy() to generate new boards.
     Note: can only clear rows/cols currently being placed in - previously filled
     axes will remain full.
 

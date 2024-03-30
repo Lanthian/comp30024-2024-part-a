@@ -69,7 +69,6 @@ def tetrominoes_plus(
     to the coordinate but do NOT include it. Additionally, can take a 
     (empty by default) to check if neighbouring cells are already filled and 
     shorten calculation.
-    List should always be of TODO un-calculated length - apparently 188?
     """
     t = []
 
@@ -80,7 +79,7 @@ def tetrominoes_plus(
         new = Coord.__add__(c, dir)
 
         # Add surrounding tetrominoes, omitting centre tile, and dropping dups
-        t += [t1 for t1 in tetrominoes(new, tiles) if t1 not in t]
+        t += ([t1 for t1 in tetrominoes(new, tiles) if t1 not in t])
         # (1*s, 1*z, 1*l, 1*j, 2*t) * 4 = 24 dropped as dup
 
     return t
