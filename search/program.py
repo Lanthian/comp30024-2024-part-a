@@ -19,15 +19,14 @@ class State():
     """
     A dataclass representing a current "state" of the game, where `board` stores
     the game board as of current, `path` the list of PlaceActions to get to this
-    board, `tile` the current cell of interest to build from, `g` the cost of
-    moves to get here, `h` a heuristic prediction of best case moves to get to
-    end goal.
+    board, `g` the cost of moves to get here, `h` a heuristic prediction of best 
+    case moves to get to end goal.
     """
     board: dict[Coord, PlayerColor]
     path: list[PlaceAction]
-    tile: Coord
     g: int                          # current actions count, todo - maybe redundant with len(path)?
     h: float                          # estimated remaining actions; cost to goal
+    lifo_counter: int
 
     @property
     def cost(self) -> float:
@@ -35,11 +34,14 @@ class State():
     
     def __eq__(self, other):
         return (self.board == other.board and
-                self.tile == other.tile and
                 self.g == other.g and
-                self.h == other.h)
+                self.h == other.h and
+                self.lifo_counter == other.lifo_counter)
                 # path doesn't matter if cost is equal
     def __lt__(self, other):
+        # For equal costs, sort LIFO instead of default priority queue FIFO
+        if self.cost == other.cost:
+            return self.lifo_counter < other.lifo_counter 
         return self.cost < other.cost
     
     """ in the case of creating a hash function and using state in a set.
@@ -106,28 +108,42 @@ def search(
     
     pq = PriorityQueue()
     seen = []
-    for (coord, color) in board.items():
+    count = 0
+
+    h = heu_board(board, target)
+    s = State(board, [], 0, h, count)
+    count -= 1
+    pq.put(s)
+    seen.append(s)
+
+    print(h)
+    return []
+
+
+    """ for (coord, color) in board.items():
         if color == PlayerColor.RED:
             print(f"bb + {coord}")
             # Find heuristic cost of coord for state
             h = heu3(board, coord, target)
             #h = heu2(board, coord, target)
-            s = State(board, [], coord, 0, h)
+            s = State(board, [], 0, h, count)
+            count -= 1
             # Skip preexisting states
             if s in seen: 
                 print("duplicate found")
                 continue
             # States comparable via total_ordering so can be inserted directly
             pq.put(s)
-            seen.append(s)
-    
+            seen.append(s) """
+
     i = 0
     # Work through queue for as long as elements exist and goal not met
     while not pq.empty():
+        print("//Getting")
         curr = pq.get()
         print(f"Lap: {i}")
         i += 1
-        # print(render_board(curr.board, target, True))
+        print(render_board(curr.board, target, True))
         print(f"Path: {curr.path}")
 
         # Check goal & return if done - guaranteed least/equal least cost path 
@@ -136,21 +152,36 @@ def search(
             return curr.path
 
         # Generate next moves from this step and enqueue them
-        next_moves = tetrominoes_plus(curr.tile, curr.board)
-        for move in next_moves:
-            # If move is valid - enqueue following states
-            if valid_place(curr.board, move):
-                next_board = make_place(curr.board.copy(), move, PlayerColor.RED)
-
-                # Queue a state for each new
-                for (coord, color) in next_board.items():
-                    if color == PlayerColor.RED:
-                        h = heu3(next_board, coord, target)
-                        #h = heu2(next_board, coord, target)
-                        s = State(next_board, curr.path + [move], coord, curr.g+1, h)
-                        if s in seen: continue
-                        pq.put(s)
-                        seen.append(s)
+        print("//Generating")
+        for (tile, color) in board.items():
+            if color == PlayerColor.RED:
+                
+                #### OLD CODE =====================================================================================================================================
+                next_moves = tetrominoes_plus(curr.tile, curr.board)
+                print("//Sorting through - size: ", len(next_moves))    
+                # todo -temp, SLOWS DOWN HERE VVVVV
+                i = 0
+                for move in next_moves:
+                    print(f"m{i}")
+                    i+=1
+                    # If move is valid - enqueue following states
+                    if valid_place(curr.board, move):
+                        next_board = make_place(curr.board.copy(), move, PlayerColor.RED)
+                        # Queue a state for each new
+                        # print("t", end="")
+                        print(f"Itmes - {len(next_board.items())}, PQ - {pq.qsize()}, Seen - {len(seen)}")
+                        for (coord, color) in next_board.items():
+                            if color == PlayerColor.RED:
+                                h = heu3(next_board, coord, target)
+                                #h = heu2(next_board, coord, target)
+                                s = State(next_board, curr.path + [move], coord, curr.g+1, h, count)
+                                count -= 1
+                                if s in seen: continue
+                                # todo - guess it's happening here
+                                pq.put(s)
+                                seen.append(s)
+                        # print(" - done!")
+        print()
         
 
         print(curr.cost)
@@ -236,6 +267,19 @@ def distance_from_axes(source: Coord, target: Coord) -> int:
     return min(row_distance, col_distance)
 
 
+
+def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
+    best = 15   # Worst possible h value
+    # Iterate through red tiles in board
+    for (tile, color) in board.items():
+        if color == PlayerColor.RED:
+            # Update board rating if new tile has better heuristic
+            t = heu2(board, tile, target)
+            if t < best: best = t
+    return best
+
+
+
 # need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
 
 # heuristic 3 h(n)
@@ -283,7 +327,7 @@ def heu3(board: dict[Coord, PlayerColor],
 # heuristic 2 in A* fulfills the h(n) (the heuristic estimate from n to the target)
 def heu2(board: dict[Coord, PlayerColor], 
         source: Coord, 
-        target: Coord) -> int:
+        target: Coord) -> float:
     """A heuristic - finds the minimum piece cost from a source coord to either 
     of a target coord's axes PLUS the number of free cells to fill. 
     Piece cost/standardisation refers to perfectly placing a piece towards
@@ -304,9 +348,9 @@ def heu2(board: dict[Coord, PlayerColor],
     P_SIZE = 4                                  # 4 tiles in a tetromino
     # In terms of reaching a filled axis:
     # xy = x pieces then y pieces, yx = y pieces then x pieces
-    xy = ceildiv(abs_distance(target.c,source.c) + free_cells(board,target,"c"), P_SIZE)
-    yx = ceildiv(abs_distance(target.r,source.r) + free_cells(board,target,"r"), P_SIZE)
-    return min(xy, yx)
+    xy = abs_distance(target.c,source.c) + free_cells(board,target,"c")
+    yx = abs_distance(target.r,source.r) + free_cells(board,target,"r")
+    return (min(xy, yx)) / P_SIZE
 
 
 def free_cells(
@@ -334,7 +378,7 @@ def free_cells(
             print("ERROR free_cells: invalid axis specified.")
             return None
 
-    # Subtract occupied cells to find free cdount
+    # Subtract occupied cells to find free count
     for i in range(BOARD_N):
         if axis_iterator(i) in board:
             free -= 1
