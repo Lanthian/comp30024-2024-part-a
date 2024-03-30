@@ -114,7 +114,7 @@ def search(
     s = State(board, [], 0, h, count)
     count -= 1
     pq.put(s)
-    seen.append(s)
+    seen.append(board)
 
 
 
@@ -137,13 +137,13 @@ def search(
     i = 0
     # Work through queue for as long as elements exist and goal not met
     while not pq.empty():
-        if i == 30: return []               # todo - temporary limiter
+        # if i == 60: return []               # todo - temporary limiter
         print("//Getting")
         curr = pq.get()
         print(f"Lap: {i}")
         i += 1
         print(render_board(curr.board, target, True))
-        print(f"Path: {curr.path}")
+        print(f"Path length: {curr.g}, Heu: {curr.h}")
 
         # Check goal & return if done - guaranteed least/equal least cost path 
         if check_win(target, curr.board): 
@@ -152,18 +152,19 @@ def search(
 
         # Generate next moves from this step and enqueue them
         print("//Generating")
-        moves = possible_moves(board, PlayerColor.RED)
+        moves = possible_moves(curr.board, PlayerColor.RED)
         print(f"//Inserting - {len(moves)}")
         for move in moves:
-            new_board = make_place(board.copy(), move, PlayerColor.RED)
+            new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
-            # if new_board in seen: continue
+            if new_board in seen: continue
             s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
             count -= 1
             pq.put(s)
-            seen.append(s)
+            seen.append(new_board)
         
         print(f"Queue: {pq.qsize()}")
+        print(pq.empty())
 
     return []
 
@@ -279,7 +280,7 @@ def possible_moves(board: dict[Coord, PlayerColor],
     for (coord, color) in board.items():
         if color == player:
             # duplicate moves generated and ignored here - todo improve
-            moves.update(tetrominoes_plus(coord, board.keys()))
+            moves.update(tetrominoes_plus(coord, set(board.keys())))
 
     return list(moves)
 
