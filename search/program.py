@@ -7,7 +7,7 @@
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 from queue import PriorityQueue
-from .tetrominoes import *
+from .tetrominoes import tetrominoes, tetrominoes_plus
 from dataclasses import dataclass
 from functools import total_ordering
 
@@ -112,22 +112,6 @@ def search(
     pq.put(s)
     seen.append(board)          # having this as a list gets expensive
 
-    """ for (coord, color) in board.items():
-        if color == PlayerColor.RED:
-            print(f"bb + {coord}")
-            # Find heuristic cost of coord for state
-            h = heu3(board, coord, target)
-            #h = heu2(board, coord, target)
-            s = State(board, [], 0, h, count)
-            count -= 1
-            # Skip preexisting states
-            if s in seen: 
-                print("duplicate found")
-                continue
-            # States comparable via total_ordering so can be inserted directly
-            pq.put(s)
-            seen.append(s) """
-
     # Work through queue for as long as elements exist and goal not met
     if DEBUG_PRINT: i = 0
     while not pq.empty():
@@ -219,57 +203,12 @@ def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
     for (tile, color) in board.items():
         if color == PlayerColor.RED:
             # Update board rating if new tile has better heuristic
-            t = heu2(board, tile, target)
+            t = heuristic(board, tile, target)
             if t < best: best = t
     return best
 
 
-# need a g(n) heuristic which will be step cost / 4 to generalise it to heu2 value? (the cost from the start node to n, initially 0 for starting nodes) 
-
-# heuristic 3 h(n)
-def heu3(board: dict[Coord, PlayerColor], 
-        source: Coord, 
-        target: Coord) -> float:
-    """
-    Calculate the heuristic distance from start to goal on a grid that wraps around
-    at the edges, considering pieces.
-
-    :param start: A tuple (x, y) representing the start coordinate.
-    :param goal: A tuple (x, y) representing the goal coordinate.
-    :return: The estimated number of pieces needed to reach the goal, rounded to 1 decimal place
-
-    Chose not to include obstacles to not overestimate cost, and increase complexity/runtime by exploring unecessary pathways
-    """
-    # Manhattan distances
-    dx = abs(target.c - source.c)
-    dy = abs(target.r - source.r)
-
-    # Wraparound distances
-    dx_wrap = BOARD_N - dx
-    dy_wrap = BOARD_N - dy
-
-    min_dx = min(dx, dx_wrap)
-    min_dy = min(dy, dy_wrap)
-
-    total_distance = min_dx + min_dy
-
-    # Adjust by the maximum coverage of a Tetris piece
-    estimated_pieces = total_distance / 4
-
-    # free 
-    free_in_row = free_cells(board, target, "row")
-    free_in_col = free_cells(board, target, "col")
-    
-    free_path_weight = (min(free_in_row, free_in_col))/BOARD_N 
-    
-    return estimated_pieces + free_path_weight
-
-    # Ceiling to ensure at least one piece is needed if there's any distance
-    return max(1, round(estimated_pieces, 1))
-
-
-# heuristic 2 in A* fulfills the h(n) (the heuristic estimate from n to the target)
-def heu2(board: dict[Coord, PlayerColor], 
+def heuristic(board: dict[Coord, PlayerColor], 
         source: Coord, 
         target: Coord) -> float:
     """A heuristic - finds the minimum piece cost from a source coord to either 
@@ -332,30 +271,6 @@ def free_cells(
             free -= 1
 
     return free
-
-
-# todo: REDR - currently unused as piece generation altered to not need this
-def valid_place(board: dict[Coord, PlayerColor], place: PlaceAction) -> int:
-    """
-    Checks is a tetromino placement is valid for a given board state. Assumes
-    tetromino coords themselves are in a valid shape.
-
-    Parameters:
-        `board`: a dictionary representing the initial board state, mapping
-            coordinates to "player colours". The keys are `Coord` instances,
-            and the values are `PlayerColor` instances.  
-        `place`: a `PlaceAction`instance of four coordinates of a tetromino
-            piece to place onto the board.
-    
-    Returns:
-        A binary int for whether or not given PlaceAction can be reasonably 
-        performed on given board. Returns 1 if valid, 0 if not.
-    """
-    for coord in place.coords:
-        if coord in board:
-            return 0
-    return 1
-
 
 def make_place(
     board: dict[Coord, PlayerColor], 
@@ -425,11 +340,3 @@ def abs_distance(a, b):
     """
     absolute = abs(a-b)
     return min(absolute, BOARD_N-absolute)
-
-
-# todo: REDR - currently unused, feels like to makes easy code more complex
-def check_win(target: Coord, board: dict[Coord,PlayerColor]) -> bool:
-    """Function added to make checking goal state more readable. Returns true if
-    goal has been reached, false if not.
-    """
-    return target not in board
