@@ -4,17 +4,18 @@
 # todo/temp - Terminal input
 # python -m search < test-vis1.csv
 
+# === Imports ===
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 from queue import PriorityQueue
-from .tetrominoes import tetrominoes, tetrominoes_plus
+from .tetrominoes import tetrominoes_plus
 from dataclasses import dataclass
 from functools import total_ordering
 
+# === Constants ===
+DEBUG_PRINT = False
 
-DEBUG_PRINT = True
 
-# @dataclass(frozen=True)
 @dataclass(frozen=True, slots=True)
 @total_ordering
 class State():
@@ -22,13 +23,14 @@ class State():
     A dataclass representing a current "state" of the game, where `board` stores
     the game board as of current, `path` the list of PlaceActions to get to this
     board, `g` the cost of moves to get here, `h` a heuristic prediction of best 
-    case moves to get to end goal.
+    case moves to get to end goal, and `lifo_id` a counter to measure how old a
+    state is in comparison with other equal cost states.
     """
     board: dict[Coord, PlayerColor]
     path: list[PlaceAction]
-    g: int                          # current actions count, todo - maybe redundant with len(path)?
-    h: float                          # estimated remaining actions; cost to goal
-    lifo_counter: int
+    g: int                      # current actions count, equivalent to len(path)
+    h: float                    # estimated optimal remaining actions
+    lifo_id: int
 
     @property
     def cost(self) -> float:
@@ -36,14 +38,14 @@ class State():
     
     def __eq__(self, other):
         return (self.board == other.board and
-                self.g == other.g and
-                self.h == other.h and
-                self.lifo_counter == other.lifo_counter)
+                self.cost == other.cost and
+                self.lifo_id == other.lifo_id)
                 # path doesn't matter if cost is equal
+    
     def __lt__(self, other):
         # For equal costs, sort LIFO instead of default priority queue FIFO
         if self.cost == other.cost:
-            return self.lifo_counter < other.lifo_counter 
+            return self.lifo_id < other.lifo_id 
         return self.cost < other.cost
     
     """ in the case of creating a hash function and using state in a set.
@@ -76,31 +78,17 @@ def search(
     # The render_board() function is handy for debugging. It will print out a
     # board state in a human-readable format. If your terminal supports ANSI
     # codes, set the `ansi` flag to True to print a colour-coded version!
-    print(render_board(board, target, ansi=True))
-    print("===============================================================")
-    
-    #28/04/2024. Sorry haven't done much work, will get on it especially over break - Anthony
+    if DEBUG_PRINT: print(render_board(board, target, ansi=True))
+    if DEBUG_PRINT: print("===================================================")
     """
     Plan:
-    scan all red coords and simultaneously calculate heuristic manhattan value.
-    Generate state and store state node.
-    Skip pre-existing states, removes possiblity of infinite loop of generating
-    Insert into priority queue with values
-
-    For each consequent generation:
-    1) Dequeue node
-    2) generate expanded nodes and insert using heuristic + step cost as evaluation functions
-    3) Insert. 
-    4) Repeatedly scan board state to identify if target coord is gone, if so return with this node state.
-    5) Function to get path of this node state and submit these place actions
-
-    Talked to people in my tutorial and main issue is an admissable heuristic, especially with the possibility of needing
-    to clear multiple axes first. Manhatten distance won't cut it.
-    WILL WORK ON IT BEGINNING TOMORROW AND GRIND. Want to get this done before Monday
+    Using a priority queue to store states, add initial state as a node, then:
+    1) Dequeue node - return path if goal met and end search
+    2) Generate children states - each possible PlaceAction from each possible
+        red token currently on board.
+    3) Insert nodes into PQ using heuristic + step cost as evaluation functions
+    Repeat steps 1-3 until a goal node is found, or exhausted (return None)    
     """
-    
-    ### attempt 2!
-    # ========================================================================= WIP
     
     pq = PriorityQueue()
     seen = []
@@ -114,8 +102,10 @@ def search(
 
     # Work through queue for as long as elements exist and goal not met
     if DEBUG_PRINT: i = 0
+    j = 0                                                                       # todo - temp
     while not pq.empty():
         curr = pq.get()
+        j += 1                                                                  # todo - temp
         if DEBUG_PRINT: 
             print(f"===Lap: {i}, Queue Size: {pq.qsize()} ===")
             i += 1
@@ -125,12 +115,15 @@ def search(
         # Check goal & return if done - guaranteed least/equal least cost path 
         if target not in curr.board:
             # (A) best solution found!
+            print(f"=== Lap: {j}, Queue Size: {pq.qsize()} ===")                # todo - temp
             return curr.path
 
         # Generate next moves from this step and enqueue them
         if DEBUG_PRINT: print("//Generating...")
         moves = possible_moves(curr.board, PlayerColor.RED)
         if DEBUG_PRINT: print(f"//Inserting {len(moves)} moves")
+        # todo - this is the expensive area. 
+        # Optimise this and we'll have a kickass solution
         for move in moves:
             new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
@@ -142,16 +135,6 @@ def search(
         
     # If here - no solutions found in all possible board expansions
     return None
-
-    # temp : print out board state changes
-    # for i in temp:
-    #     board = make_place(board, i, PlayerColor.RED)
-    #     print(render_board(board, target, ansi=True))
-
-    # print (valid_place(board,temp[0]))                        # temp
-    # print (make_place(board, temp[0], PlayerColor.RED))       # temp
-
-    return temp
 
 
 def possible_moves(board: dict[Coord, PlayerColor], 
@@ -167,17 +150,6 @@ def possible_moves(board: dict[Coord, PlayerColor],
             moves.update(tetrominoes_plus(coord, set(board.keys())))
 
     return list(moves)
-
-
-# todo: REDR - currently unused
-def distance_from_axes(source: Coord, target: Coord) -> int:
-    """Heuristic: Finds the minimum distance from a source coord to either of a 
-    target coord's axes. Returns this integer.
-    """
-    row_distance = abs_distance(target.c,source.c)
-    col_distance = abs_distance(target.r,source.r)
-    
-    return min(row_distance, col_distance)
 
 
 def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
@@ -250,8 +222,9 @@ def free_cells(
     that the board is a sparse representation of tokens present by checking if 
     dict contains each axis coordinate.
 
-    Returns either the count of free cells in target axis, or None if incorrect 
-    use / error. 
+    Returns:
+        Either the count of free cells in target axis, or None if invalid `axis`
+        flag supplied.
     """
     free = BOARD_N
     
@@ -272,6 +245,7 @@ def free_cells(
 
     return free
 
+
 def make_place(
     board: dict[Coord, PlayerColor], 
     place: PlaceAction, 
@@ -280,7 +254,7 @@ def make_place(
     """
     Assumes the place actions have been validated first, otherwise it can write
     over the top of existing cells. Places tetrominoes on a board, clearing rows
-    if filled. Acts in place - use with .copy() to generate new boards.
+    / cols if filled. Acts in place - use with .copy() to generate new boards.
     Note: can only clear rows/cols currently being placed in - previously filled
     axes will remain full.
 
@@ -323,15 +297,6 @@ def make_place(
         board.pop(tile, 0)
         
     return board
-
-
-# todo: REDR - currently unused, opting for floats instead
-def ceildiv(a, b):
-    """Helper math function to perform ceiling division.
-    Inspired by user @dlitz https://stackoverflow.com/users/253367/dlitz
-        in post https://stackoverflow.com/a/17511341
-    """
-    return -(a // -b)
 
 
 def abs_distance(a, b):

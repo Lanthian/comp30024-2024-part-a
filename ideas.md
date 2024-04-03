@@ -80,3 +80,10 @@ Solutions CAN now be output - not yet optimal. We should check between equal pri
   beginning to expand them all. Plus, a better heuristic can definitely be developed and we can possibly cut down on 
   which tetrominoes are generated for each tile of a board, rather than brute-force generating all of them and queueing
   them differently.
+
+
+### 2024.04.03
+Most time is lost to insertion into priority queue. A better data structure is needed here. 
+  Even more important than an improved heuristic I'd wager...
+  Alternatively, some kind of putall() for the PQ would also fix this
+  Look into perhaps the heapdict module? Or something similar

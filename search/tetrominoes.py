@@ -29,7 +29,6 @@ def tetrominoes(
 
     in_progress = [[c]]
     seen = []               
-    # todo - cannot use set as lists are unhashable...
     # Work through a queue of semi-assembled tetrominoes to build whole set
     while len(in_progress) > 0:
         curr = in_progress.pop(0)
@@ -43,7 +42,6 @@ def tetrominoes(
             seen.append(curr)
             if len(curr) == 4:
                 # valid tetromino - convert to PlaceAction
-                # todo -
                 t.append(PlaceAction(curr[0],curr[1],curr[2],curr[3]))
                 continue
         
