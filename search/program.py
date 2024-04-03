@@ -11,6 +11,7 @@ from queue import PriorityQueue
 from .tetrominoes import tetrominoes_plus
 from dataclasses import dataclass
 from functools import total_ordering
+import json
 
 # === Constants ===
 DEBUG_PRINT = False
@@ -47,12 +48,15 @@ class State():
         if self.cost == other.cost:
             return self.lifo_id < other.lifo_id 
         return self.cost < other.cost
-    
+
     """ in the case of creating a hash function and using state in a set.
     def __hash__(self):
         # Hash is a combination of board, tile, g, and h
         return hash((self.board, self.tile, self.g, self.h))
     """
+
+    # def __hash__(self):
+    #     return hash((self.board_flat(), self.cost()))
     
 
 def search(
@@ -91,14 +95,14 @@ def search(
     """
     
     pq = PriorityQueue()
-    seen = []
+    seen = set() # stored in hashable set rather than list to improve check time
     count = 0
 
     h = heu_board(board, target)
     s = State(board, [], 0, h, count)
     count -= 1
     pq.put(s)
-    seen.append(board)          # having this as a list gets expensive
+    seen.add(flatten_board(board))
 
     # Work through queue for as long as elements exist and goal not met
     if DEBUG_PRINT: i = 0
@@ -122,16 +126,14 @@ def search(
         if DEBUG_PRINT: print("//Generating...")
         moves = possible_moves(curr.board, PlayerColor.RED)
         if DEBUG_PRINT: print(f"//Inserting {len(moves)} moves")
-        # todo - this is the expensive area. 
-        # Optimise this and we'll have a kickass solution
         for move in moves:
             new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
-            if new_board in seen: continue
+            if flatten_board(new_board) in seen: continue
             s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
             count -= 1
             pq.put(s)
-            seen.append(new_board)
+            seen.add(flatten_board(new_board))
         
     # If here - no solutions found in all possible board expansions
     return None
@@ -305,3 +307,8 @@ def abs_distance(a, b):
     """
     absolute = abs(a-b)
     return min(absolute, BOARD_N-absolute)
+
+
+def flatten_board(board: dict[Coord, PlayerColor]) -> str:
+    """Takes a game board state and converts it to (and returns) a string"""
+    return ".".join([(k.__str__() + v.__str__()) for (k,v) in board.items()])
