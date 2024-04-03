@@ -11,7 +11,6 @@ from queue import PriorityQueue
 from .tetrominoes import tetrominoes_plus
 from dataclasses import dataclass
 from functools import total_ordering
-import json
 
 # === Constants ===
 DEBUG_PRINT = False
@@ -49,15 +48,6 @@ class State():
             return self.lifo_id < other.lifo_id 
         return self.cost < other.cost
 
-    """ in the case of creating a hash function and using state in a set.
-    def __hash__(self):
-        # Hash is a combination of board, tile, g, and h
-        return hash((self.board, self.tile, self.g, self.h))
-    """
-
-    # def __hash__(self):
-    #     return hash((self.board_flat(), self.cost()))
-    
 
 def search(
     board: dict[Coord, PlayerColor], 
@@ -95,7 +85,8 @@ def search(
     """
     
     pq = PriorityQueue()
-    seen = set() # stored in hashable set rather than list to improve check time
+    # Seen states stored in hashable set rather than list to improve check time
+    seen = set() 
     count = 0
 
     h = heu_board(board, target)
@@ -106,10 +97,8 @@ def search(
 
     # Work through queue for as long as elements exist and goal not met
     if DEBUG_PRINT: i = 0
-    j = 0                                                                       # todo - temp
     while not pq.empty():
         curr = pq.get()
-        j += 1                                                                  # todo - temp
         if DEBUG_PRINT: 
             print(f"===Lap: {i}, Queue Size: {pq.qsize()} ===")
             i += 1
@@ -119,7 +108,6 @@ def search(
         # Check goal & return if done - guaranteed least/equal least cost path 
         if target not in curr.board:
             # (A) best solution found!
-            print(f"=== Lap: {j}, Queue Size: {pq.qsize()} ===")                # todo - temp
             return curr.path
 
         # Generate next moves from this step and enqueue them
@@ -310,5 +298,11 @@ def abs_distance(a, b):
 
 
 def flatten_board(board: dict[Coord, PlayerColor]) -> str:
-    """Takes a game board state and converts it to (and returns) a string"""
-    return ".".join([(k.__str__() + v.__str__()) for (k,v) in board.items()])
+    """
+    Takes a game board state and converts it into (and returns) a string
+    representation, using .__str__() methods of Coord and PlayerColor.
+    """
+    temp = [(k.__str__() + v.__str__()) for (k,v) in board.items()]
+    # Sort to ensure all dictionaries with the same values are equivalent
+    temp.sort()
+    return ".".join(temp)
