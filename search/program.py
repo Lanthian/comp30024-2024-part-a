@@ -3,6 +3,7 @@
 
 # todo/temp - Terminal input
 # python -m search < test-vis1.csv
+# python -m search < tung-csvs/1.csv
 
 # === Imports ===
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
@@ -13,7 +14,7 @@ from dataclasses import dataclass
 from functools import total_ordering
 
 # === Constants ===
-DEBUG_PRINT = 2
+DEBUG_PRINT = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,7 +69,7 @@ def search(
         A list of "place actions" as PlaceAction instances, or `None` if no
         solution is possible.
     """
-    # === Prepare board ===
+    # Prepare board
     clear_axes(board)
 
     # The render_board() function is handy for debugging. It will print out a
@@ -206,7 +207,7 @@ def heuristic(
     # -1 done to drop off overlap between two measures
     xy = abs_distance(target.c,source.c) + free_cells(board,target,"c") - 1
     yx = abs_distance(target.r,source.r) + free_cells(board,target,"r") - 1
-    return (min(xy, yx)) / P_SIZE
+    return ceildiv((min(xy, yx)), P_SIZE)
 
 
 def free_cells(
@@ -326,3 +327,11 @@ def flatten_board(board: dict[Coord, PlayerColor]) -> str:
     # Sort to ensure all dictionaries with the same values are equivalent
     temp.sort()
     return ".".join(temp)
+
+
+def ceildiv(a, b):
+    """Helper math function to perform ceiling division.
+    Inspired by user @dlitz https://stackoverflow.com/users/253367/dlitz
+        in post https://stackoverflow.com/a/17511341
+    """
+    return -(a // -b)
