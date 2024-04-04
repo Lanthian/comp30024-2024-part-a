@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from functools import total_ordering
 
 # === Constants ===
-DEBUG_PRINT = False
+DEBUG_PRINT = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,12 +68,14 @@ def search(
         A list of "place actions" as PlaceAction instances, or `None` if no
         solution is possible.
     """
+    # === Prepare board ===
+    clear_axes(board)
 
     # The render_board() function is handy for debugging. It will print out a
     # board state in a human-readable format. If your terminal supports ANSI
     # codes, set the `ansi` flag to True to print a colour-coded version!
-    if DEBUG_PRINT: print(render_board(board, target, ansi=True))
-    if DEBUG_PRINT: print("===================================================")
+    if DEBUG_PRINT > 3: print(render_board(board, target, ansi=True))
+    if DEBUG_PRINT > 3: print("===================================================")
     """
     Plan:
     Using a priority queue to store states, add initial state as a node, then:
@@ -96,10 +98,10 @@ def search(
     seen.add(flatten_board(board))
 
     # Work through queue for as long as elements exist and goal not met
-    if DEBUG_PRINT: i = 0
+    if DEBUG_PRINT > 3: i = 0
     while not pq.empty():
         curr = pq.get()
-        if DEBUG_PRINT: 
+        if DEBUG_PRINT > 3: 
             print(f"===Lap: {i}, Queue Size: {pq.qsize()} ===")
             i += 1
             print(render_board(curr.board, target, True))
@@ -108,12 +110,16 @@ def search(
         # Check goal & return if done - guaranteed least/equal least cost path 
         if target not in curr.board:
             # (A) best solution found!
+            if DEBUG_PRINT > 1:
+                print(render_board(board,target,True))
+                for i in curr.path:
+                    print(render_board(make_place(board,i,PlayerColor.RED),target,True))
             return curr.path
 
         # Generate next moves from this step and enqueue them
-        if DEBUG_PRINT: print("//Generating...")
+        if DEBUG_PRINT > 3: print("//Generating...")
         moves = possible_moves(curr.board, PlayerColor.RED)
-        if DEBUG_PRINT: print(f"//Inserting {len(moves)} moves")
+        if DEBUG_PRINT > 3: print(f"//Inserting {len(moves)} moves")
         for move in moves:
             new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
@@ -170,7 +176,8 @@ def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
     return best
 
 
-def heuristic(board: dict[Coord, PlayerColor], 
+def heuristic(
+        board: dict[Coord, PlayerColor], 
         source: Coord, 
         target: Coord) -> float:
     """A heuristic - finds the minimum piece cost from a source coord to either 
@@ -236,6 +243,34 @@ def free_cells(
     return free
 
 
+def clear_axes(
+    board: dict[Coord, PlayerColor],
+    row_range: list[int]=range(BOARD_N),
+    col_range: list[int]=range(BOARD_N)
+) -> None:
+    """
+    In place - clears filled rows and columns on a game `board`. Only checks for
+    clearable axes in the row and column ranges supplied, to make targetted 
+    clearing more efficient. Checks all rows and columns by default. Returns 
+    nothing.
+    """
+    IRRELEVANT = 0
+
+    to_clear = set()
+    for r in row_range:
+        if free_cells(board, Coord(r,IRRELEVANT), "r") == 0:
+            [to_clear.add(Coord(r,i)) for i in range(BOARD_N)]
+    for c in col_range:
+        if free_cells(board, Coord(IRRELEVANT,c), "c") == 0:
+            [to_clear.add(Coord(i,c)) for i in range(BOARD_N)]
+
+    # Drop these cells from board
+    for tile in to_clear:
+        board.pop(tile, 0)
+
+    return None
+    
+
 def make_place(
     board: dict[Coord, PlayerColor], 
     place: PlaceAction, 
@@ -245,8 +280,6 @@ def make_place(
     Assumes the place actions have been validated first, otherwise it can write
     over the top of existing cells. Places tetrominoes on a board, clearing rows
     / cols if filled. Acts in place - use with .copy() to generate new boards.
-    Note: can only clear rows/cols currently being placed in - previously filled
-    axes will remain full.
 
     Parameters:
         `board`: a dictionary representing the initial board state, mapping
@@ -269,28 +302,15 @@ def make_place(
         placed_c.add(coord.c)
         board[coord] = color
 
-
     # - If necessary, clear now full rows and columns -
-    to_clear = set()
-    IRRELEVANT = 0
-
-    # Find all cells that need to be dropped (existing in full rows / cols)
-    for r in placed_r:
-        if free_cells(board, Coord(r,IRRELEVANT), "r") == 0:
-            [to_clear.add(Coord(r,i)) for i in range(BOARD_N)]
-    for c in placed_c:
-        if free_cells(board, Coord(IRRELEVANT,c), "c") == 0:
-            [to_clear.add(Coord(i,c)) for i in range(BOARD_N)]
-
-    # Drop these cells from board
-    for tile in to_clear:
-        board.pop(tile, 0)
+    clear_axes(board, list(placed_r), list(placed_c))
         
     return board
 
 
 def abs_distance(a, b):
-    """Takes in two numbers and returns the minimum absolute distance between 
+    """
+    Takes in two numbers and returns the minimum absolute distance between 
     them, considering a scale of BOARD_N that loops infinitely.
     """
     absolute = abs(a-b)
