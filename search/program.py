@@ -88,11 +88,16 @@ def search(
     """
     
     pq = PriorityQueue()
+    
     # Seen states stored in hashable set rather than list to improve check time
     seen = set() 
     count = 0
+    h_min = float(15)
 
     h = heu_board(board, target)
+
+    h_min = min(h_min, h) #new
+
     s = State(board, [], 0, h, count)
     count -= 1
     pq.put(s)
@@ -125,10 +130,24 @@ def search(
             new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
             # Skip duplciate boards
             if flatten_board(new_board) in seen: continue
-            s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
-            count -= 1
-            pq.put(s)
-            seen.add(flatten_board(new_board))
+            
+            h = heu_board(new_board, target) #new
+            if h < h_min:
+                h_min = h
+            if h <= (1+h_min) * 3: #hmin can become 0 so need +1 to counteract this
+                s = State(new_board, curr.path + [move], curr.g+1, h, count)
+                count -= 1
+                pq.put(s)
+                seen.add(flatten_board(new_board))
+            else:
+                continue
+            
+            
+                
+            # s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
+            # count -= 1
+            # pq.put(s)
+            # seen.add(flatten_board(new_board))
         
     # If here - no solutions found in all possible board expansions
     return None
@@ -335,3 +354,4 @@ def ceildiv(a, b):
         in post https://stackoverflow.com/a/17511341
     """
     return -(a // -b)
+
