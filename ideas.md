@@ -87,3 +87,12 @@ Most time is lost to insertion into priority queue. A better data structure is n
   Even more important than an improved heuristic I'd wager...
   Alternatively, some kind of putall() for the PQ would also fix this
   Look into perhaps the heapdict module? Or something similar
+
+
+### 2024.04.06
+Insertion fixed, only thing left noticed is that problems of non-straight forward scope struggle massively with solving
+  via our heuristic. And problems like test-vis3.csv still remain unsolvable - some trick needed to identify easy 
+  way to shorten queue without exploring all nodes - pruning somehow?...
+* test-vis4.csv (courtesy of Jack Tong via EDSTEM - https://edstem.org/au/courses/15502/discussion/1861078) terminated
+    at "=== Lap 23517, Queue Size: 1277171 ===" - hypothesised not solvable with our current solution.
+* test-vis3.csv also ran for a similar amount of time and deemed unsolvable.
