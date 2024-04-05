@@ -1,4 +1,4 @@
-"""program.py: Provides the search algorithm for __main__.py's Single Player
+"""program.py: Provides an A* search algorithm for __main__.py's Single Player
 Tetress game implementation
 
 Usage: Used alongside supplied __main__.py file and other files in search module 
@@ -12,19 +12,13 @@ __credits__ = ["Liam Anthian", "Anthony Hill"]
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
-# python -m search < tung-csvs/1.csv
-
 # === Imports ===
 from dataclasses import dataclass
 from functools import total_ordering
 
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
-from .utils import render_board
 from .tetrominoes import tetrominoes_plus
 from .prioritydict import PriorityDict
-
-# === Constants ===
-DEBUG_PRINT = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,63 +83,35 @@ def search(
     """
     
     pd = PriorityDict()
-    
     # Seen states stored in hashable set rather than list to improve check time
     seen = set() 
-    h_min = float(15)
 
-    h = heu_board(board, target)
-
-    h_min = min(h_min, h) #new
-
-    s = State(board, [], 0, h)
+    s = State(board, [], 0, heu_board(board, target))
     pd.put(s.cost, s)
     seen.add(flatten_board(board))
 
     # Work through states for as long as elements exist and goal not met
-    if DEBUG_PRINT > 3: i = 0
     while not pd.empty():
         curr = pd.get()
-        if DEBUG_PRINT > 3: 
-            print(f"=== Lap: {i}, Queue Size: {pd.size} ===")
-            i += 1
-            print(render_board(curr.board, target, True))
-            print(f"Path length: {curr.g}, Heu: {curr.h}")
 
         # Check goal & return if done - guaranteed least/equal least cost path 
         if target not in curr.board:
             # (A) best solution found!
-            if DEBUG_PRINT > 1:
-                print(render_board(board,target,True))
-                for i in curr.path:
-                    print(render_board(make_place(board,i,PlayerColor.RED),target,True))
             return curr.path
 
         # Generate next moves from this step and enqueue them
-        if DEBUG_PRINT > 3: print("//Generating...")
-        moves = possible_moves(curr.board, PlayerColor.RED)
-        if DEBUG_PRINT > 3: print(f"//Inserting {len(moves)} moves")
-        for move in moves:
-            new_board = make_place(curr.board.copy(), move, PlayerColor.RED)
+        for move in possible_moves(curr.board, PlayerColor.RED):
+            # Copy board as make_place() acts in place
+            b2 = make_place(curr.board.copy(), move, PlayerColor.RED)
+
             # Skip duplciate boards
-            if flatten_board(new_board) in seen: continue
-            
-            
-            h = heu_board(new_board, target) #new
-            if h < h_min:
-                h_min = h
-            if h <= (1+h_min) * 2: #hmin can become 0 so need +1 to counteract this
-                s = State(new_board, curr.path + [move], curr.g+1, h)
-                pd.put(s.cost, s)
-                seen.add(flatten_board(new_board))
-            else:
-                continue
-           
-                
-            """ s = State(new_board, curr.path + [move], curr.g+1, 
-                      heu_board(new_board, target))
-            pd.put(s)
-            seen.add(flatten_board(new_board)) """
+            flat_b2 = flatten_board(b2)
+            if flat_b2 in seen: continue
+
+            # Enqueue if unseen
+            s = State(b2, curr.path + [move], curr.g + 1, heu_board(b2, target))
+            pd.put(s.cost, s)
+            seen.add(flat_b2)
         
     # If here, no solutions have been found in all possible board expansions
     return None
