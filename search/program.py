@@ -8,13 +8,13 @@
 # === Imports ===
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
-from queue import PriorityQueue
 from .tetrominoes import tetrominoes_plus
+from .prioritydict import PriorityDict
 from dataclasses import dataclass
 from functools import total_ordering
 
 # === Constants ===
-DEBUG_PRINT = 0
+DEBUG_PRINT = 2
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,15 +79,16 @@ def search(
     if DEBUG_PRINT > 3: print("===================================================")
     """
     Plan:
-    Using a priority queue to store states, add initial state as a node, then:
-    1) Dequeue node - return path if goal met and end search
+    Using a custom priority dictionary (PD) of LIFO queues to store states, add 
+    initial state as a node, then:
+    1) Dequeue smallest node - return path if goal met and end search
     2) Generate children states - each possible PlaceAction from each possible
         red token currently on board.
-    3) Insert nodes into PQ using heuristic + step cost as evaluation functions
+    3) Insert nodes into PD using heuristic + step cost as evaluation functions
     Repeat steps 1-3 until a goal node is found, or exhausted (return None)    
     """
     
-    pq = PriorityQueue()
+    pd = PriorityDict()
     
     # Seen states stored in hashable set rather than list to improve check time
     seen = set() 
@@ -100,15 +101,15 @@ def search(
 
     s = State(board, [], 0, h, count)
     count -= 1
-    pq.put(s)
+    pd.put(s.cost, s)
     seen.add(flatten_board(board))
 
-    # Work through queue for as long as elements exist and goal not met
+    # Work through states for as long as elements exist and goal not met
     if DEBUG_PRINT > 3: i = 0
-    while not pq.empty():
-        curr = pq.get()
+    while not pd.empty():
+        curr = pd.get()
         if DEBUG_PRINT > 3: 
-            print(f"===Lap: {i}, Queue Size: {pq.qsize()} ===")
+            print(f"=== Lap: {i}, Queue Size: {pd.size} ===")
             i += 1
             print(render_board(curr.board, target, True))
             print(f"Path length: {curr.g}, Heu: {curr.h}")
@@ -134,10 +135,10 @@ def search(
             h = heu_board(new_board, target) #new
             if h < h_min:
                 h_min = h
-            if h <= (1+h_min) * 3: #hmin can become 0 so need +1 to counteract this
+            if h <= (1+h_min) * 2: #hmin can become 0 so need +1 to counteract this
                 s = State(new_board, curr.path + [move], curr.g+1, h, count)
                 count -= 1
-                pq.put(s)
+                pd.put(s.cost, s)
                 seen.add(flatten_board(new_board))
             else:
                 continue
@@ -146,7 +147,7 @@ def search(
                 
             # s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
             # count -= 1
-            # pq.put(s)
+            # pd.put(s)
             # seen.add(flatten_board(new_board))
         
     # If here - no solutions found in all possible board expansions
