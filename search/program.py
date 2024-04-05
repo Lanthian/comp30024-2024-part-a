@@ -1,17 +1,27 @@
+"""program.py: Provides the search algorithm for __main__.py's Single Player
+Tetress game implementation
+
+Usage: Used alongside supplied __main__.py file and other files in search module 
+    python -m search < [game csv file]
+    e.g.    python -m search < test-vis1.csv
+            python -m search < tung-csvs/1.csv"""
+
+__author__ = "Liam Anthian, and Anthony Hill"
+__credits__ = ["Liam Anthian", "Anthony Hill"] 
+
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
-# todo/temp - Terminal input
-# python -m search < test-vis1.csv
 # python -m search < tung-csvs/1.csv
 
 # === Imports ===
+from dataclasses import dataclass
+from functools import total_ordering
+
 from .core import PlayerColor, Coord, PlaceAction, BOARD_N
 from .utils import render_board
 from .tetrominoes import tetrominoes_plus
 from .prioritydict import PriorityDict
-from dataclasses import dataclass
-from functools import total_ordering
 
 # === Constants ===
 DEBUG_PRINT = 2
@@ -23,30 +33,24 @@ class State():
     """
     A dataclass representing a current "state" of the game, where `board` stores
     the game board as of current, `path` the list of PlaceActions to get to this
-    board, `g` the cost of moves to get here, `h` a heuristic prediction of best 
-    case moves to get to end goal, and `lifo_id` a counter to measure how old a
-    state is in comparison with other equal cost states.
+    board, `g` the cost of moves to get here and `h` a heuristic prediction of 
+    best case moves to get to end goal.
     """
     board: dict[Coord, PlayerColor]
     path: list[PlaceAction]
     g: int                      # current actions count, equivalent to len(path)
-    h: float                    # estimated optimal remaining actions
-    lifo_id: int
+    h: int                      # estimated optimal remaining actions
 
     @property
-    def cost(self) -> float:
+    def cost(self) -> int:
         return self.g+self.h
     
     def __eq__(self, other):
         return (self.board == other.board and
-                self.cost == other.cost and
-                self.lifo_id == other.lifo_id)
+                self.cost == other.cost)
                 # path doesn't matter if cost is equal
     
     def __lt__(self, other):
-        # For equal costs, sort LIFO instead of default priority queue FIFO
-        if self.cost == other.cost:
-            return self.lifo_id < other.lifo_id 
         return self.cost < other.cost
 
 
@@ -55,9 +59,10 @@ def search(
     target: Coord
 ) -> list[PlaceAction] | None:
     """
-    This is the entry point for your submission. You should modify this
-    function to solve the search problem discussed in the Part A specification.
-    See `core.py` for information on the types being used here.
+    Searches through a tree of possible board states from potential red moves to 
+    reach an OPTIMAL end state where the target coord provided has been removed.
+    Returns a path of core.PlaceActions to get to this state. Implements an A*
+    algorithm, using heuristics also defined in this file.
 
     Parameters:
         `board`: a dictionary representing the initial board state, mapping
@@ -69,14 +74,9 @@ def search(
         A list of "place actions" as PlaceAction instances, or `None` if no
         solution is possible.
     """
-    # Prepare board
+    # Prepare board (remove already filled axes)
     clear_axes(board)
 
-    # The render_board() function is handy for debugging. It will print out a
-    # board state in a human-readable format. If your terminal supports ANSI
-    # codes, set the `ansi` flag to True to print a colour-coded version!
-    if DEBUG_PRINT > 3: print(render_board(board, target, ansi=True))
-    if DEBUG_PRINT > 3: print("===================================================")
     """
     Plan:
     Using a custom priority dictionary (PD) of LIFO queues to store states, add 
@@ -85,22 +85,20 @@ def search(
     2) Generate children states - each possible PlaceAction from each possible
         red token currently on board.
     3) Insert nodes into PD using heuristic + step cost as evaluation functions
-    Repeat steps 1-3 until a goal node is found, or exhausted (return None)    
+    Repeat steps 1-3 until a goal node is found, or PD exhausted (return None)    
     """
     
     pd = PriorityDict()
     
     # Seen states stored in hashable set rather than list to improve check time
     seen = set() 
-    count = 0
     h_min = float(15)
 
     h = heu_board(board, target)
 
     h_min = min(h_min, h) #new
 
-    s = State(board, [], 0, h, count)
-    count -= 1
+    s = State(board, [], 0, h)
     pd.put(s.cost, s)
     seen.add(flatten_board(board))
 
@@ -132,38 +130,38 @@ def search(
             # Skip duplciate boards
             if flatten_board(new_board) in seen: continue
             
+            
             h = heu_board(new_board, target) #new
             if h < h_min:
                 h_min = h
             if h <= (1+h_min) * 2: #hmin can become 0 so need +1 to counteract this
-                s = State(new_board, curr.path + [move], curr.g+1, h, count)
-                count -= 1
+                s = State(new_board, curr.path + [move], curr.g+1, h)
                 pd.put(s.cost, s)
                 seen.add(flatten_board(new_board))
             else:
                 continue
-            
-            
+           
                 
-            # s = State(new_board, curr.path + [move], curr.g+1, heu_board(new_board, target), count)
-            # count -= 1
-            # pd.put(s)
-            # seen.add(flatten_board(new_board))
+            """ s = State(new_board, curr.path + [move], curr.g+1, 
+                      heu_board(new_board, target))
+            pd.put(s)
+            seen.add(flatten_board(new_board)) """
         
-    # If here - no solutions found in all possible board expansions
+    # If here, no solutions have been found in all possible board expansions
     return None
 
 
 def possible_moves(board: dict[Coord, PlayerColor], 
                    player: PlayerColor) -> list[PlaceAction]:
-    """Takes a game `board` and a `player` defined by their PlayerColor and
-      returns all possible next moves for said player in the form of a list of 
-      PlaceActions.
+    """
+    Takes a game `board` and a `player` defined by their PlayerColor and returns 
+    all possible next moves for said player in the form of a list of 
+    PlaceActions.
     """
     moves = set()
     for (coord, color) in board.items():
         if color == player:
-            # duplicate moves generated and ignored here - todo improve
+            # duplicate moves generated and ignored here (possible improvement)
             moves.update(tetrominoes_plus(coord, set(board.keys())))
 
     return list(moves)
@@ -181,8 +179,8 @@ def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
         `target`: the target BLUE coordinate to remove from the board.
     
     Returns:
-        An admissible heuristic float that can be rounded up to optimal least 
-        possible moves to clear target coordinate.
+        An admissible heuristic int equivalent to optimal least possible moves 
+        needed to clear target coordinate.
     """
     # No moves necessary if target cleared
     if target not in board: return 0
@@ -200,12 +198,12 @@ def heu_board(board: dict[Coord, PlayerColor], target: Coord) -> float:
 def heuristic(
         board: dict[Coord, PlayerColor], 
         source: Coord, 
-        target: Coord) -> float:
+        target: Coord) -> int:
     """A heuristic - finds the minimum piece cost from a source coord to either 
     of a target coord's axes PLUS the number of free cells to fill. 
     Piece cost/standardisation refers to perfectly placing a piece towards
     filling cells and approaching axis (dividing tile measure by 4 for number of
-    tiles in tetromino).
+    tiles in tetromino and rounding up).
 
     Parameters:
         `board`: a dictionary representing the initial board state, mapping
@@ -243,19 +241,18 @@ def free_cells(
     Returns:
         Either the count of free cells in target axis, or None if invalid `axis`
         flag supplied.
-    """
-    free = BOARD_N
-    
+    """    
     # Find which axis is iterated over
     match axis:
         case "x" | "r" | "row":
-            axis_iterator = lambda x: Coord(target.r, x)
+            axis_iterator = lambda t: Coord(target.r, t)
         case "y" | "c" | "col":
-            axis_iterator = lambda x: Coord(x, target.c)
+            axis_iterator = lambda t: Coord(t, target.c)
         case _:
             print("ERROR free_cells: invalid axis specified.")
             return None
 
+    free = BOARD_N
     # Subtract occupied cells to find free count
     for i in range(BOARD_N):
         if axis_iterator(i) in board:
@@ -270,13 +267,14 @@ def clear_axes(
     col_range: list[int]=range(BOARD_N)
 ) -> None:
     """
-    In place - clears filled rows and columns on a game `board`. Only checks for
-    clearable axes in the row and column ranges supplied, to make targetted 
-    clearing more efficient. Checks all rows and columns by default. Returns 
-    nothing.
+    Acts in place - clears filled rows and columns on a game `board`. Only 
+    checks for clearable axes in the row and column ranges supplied, to make 
+    targetted clearing more efficient. Checks all rows and columns by default. 
+    Returns nothing (None).
     """
     IRRELEVANT = 0
 
+    # Find all cells that exist in checked filled rows/cols
     to_clear = set()
     for r in row_range:
         if free_cells(board, Coord(r,IRRELEVANT), "r") == 0:
@@ -318,14 +316,13 @@ def make_place(
     placed_c = set()
 
     for coord in place.coords:
-        # Add coordinate axes to tracking sets and place token
+        # Add coordinate axes to tracking sets then place token
         placed_r.add(coord.r)
         placed_c.add(coord.c)
         board[coord] = color
 
-    # - If necessary, clear now full rows and columns -
+    # If necessary, clear now full rows and columns
     clear_axes(board, list(placed_r), list(placed_c))
-        
     return board
 
 
@@ -343,10 +340,12 @@ def flatten_board(board: dict[Coord, PlayerColor]) -> str:
     Takes a game board state and converts it into (and returns) a string
     representation, using .__str__() methods of Coord and PlayerColor.
     """
-    temp = [(k.__str__() + v.__str__()) for (k,v) in board.items()]
+    DELIM = "."
+
+    coord_colors = [(k.__str__() + v.__str__()) for (k,v) in board.items()]
     # Sort to ensure all dictionaries with the same values are equivalent
-    temp.sort()
-    return ".".join(temp)
+    coord_colors.sort()
+    return DELIM.join(coord_colors)
 
 
 def ceildiv(a, b):
@@ -355,4 +354,3 @@ def ceildiv(a, b):
         in post https://stackoverflow.com/a/17511341
     """
     return -(a // -b)
-

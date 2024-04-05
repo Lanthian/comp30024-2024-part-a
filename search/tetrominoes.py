@@ -1,3 +1,9 @@
+"""tetrominoes.py: Provides functions to generate lists of 4 Coord PlaceActions
+based on the dataclasses present in core.py"""
+
+__author__ = "Liam Anthian, and Anthony Hill"
+__credits__ = ["Liam Anthian", "Anthony Hill"] 
+
 # COMP30024 Artificial Intelligence, Semester 1 2024
 # Project Part A: Single Player Tetress
 
@@ -9,8 +15,7 @@ def tetrominoes(
 ) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that include this coordinate, relating to the board size
-    defined in core.py. List should be of length 76 be default.
-    Returns None
+    defined in core.py. List should be of length 76 if `tiles` is empty.
     (z*2 + s*2 + i*2 + t*4 + o*1 + j*4 + l*4) * 4 = 19 * 4 = 76
 
     Parameters:
@@ -62,7 +67,7 @@ def tetrominoes_plus(
 ) -> list[PlaceAction]:
     """Takes a Coord c and generates a list of Place actions of all unique 4 
     tiled "tetrominoes" that build off of this coordinate, that is, are adjacent
-    to the coordinate but do NOT include it. Additionally, can take a 
+    to the coordinate but do NOT include it. Additionally, can take a set
     (empty by default) to check if neighbouring cells are already filled and 
     shorten calculation.
     """
@@ -76,6 +81,6 @@ def tetrominoes_plus(
 
         # Add surrounding tetrominoes, omitting centre tile, and dropping dups
         t += ([t1 for t1 in tetrominoes(new, tiles) if t1 not in t])
-        # (1*s, 1*z, 1*l, 1*j, 2*t) * 4 = 24 dropped as dup
+        # (1*s, 1*z, 1*l, 1*j, 2*t) * 4 = 24 dropped as dup (if `tiles` empty)
 
     return t
